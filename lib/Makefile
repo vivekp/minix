@@ -44,6 +44,7 @@ build_clang:
 
 build_elf:
 	sh elf_build.sh obj depend all install
+.endif
 
 clean_clang:
 	sh clang_build.sh clean
@@ -53,4 +54,8 @@ clean_gnu:
 
 clean_elf:
 	sh elf_build.sh clean
-.endif
+
+clean_elf_base:
+	sh elf_build_base.sh clean
+
+clean_ack: clean

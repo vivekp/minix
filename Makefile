@@ -79,7 +79,7 @@ clang-libraries: includes
 .endif
 
 .ifdef MINIX_GENERATE_ELF
-elf-libraries:
+elf-libraries: includes
 	$(MAKE) -C lib build_elf_base
 .else
 elf-libraries: elf-includes
