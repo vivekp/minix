@@ -8,11 +8,6 @@ XBIN=usr/xbin
 SRC=src
 REPO=git://git.minix3.org/minix
 
-# Which revision, arch are we building?
-BUILDREV="`uname -r`"
-BUILDARCH="`uname -p`"
-PACKAGEDIR=/usr/pkgsrc/packages/$BUILDREV/$BUILDARCH/All/
-
 # List of packages included on installation media
 PACKAGELIST=packages.install
 secs=`expr 32 '*' 64`
@@ -75,8 +70,7 @@ MAKEMAP=0
 # Do we have git?
 if git --version >/dev/null
 then	if [ -d ../.git ]
-	then	REVTAG="`git describe --always --dirty`"
-		echo "git mode; building $REVTAG"
+	then	LOCAL_REVTAG="`git describe --always`"
 		GITMODE=1
 	fi
 fi
@@ -137,7 +131,7 @@ fi
 
 if [ $PACKAGES -ne 0 ]
 then	mkdir -p $PACKAGEDIR/All || true
-	retrieve $PACKAGEDIR/All $PACKAGELIST packages/$BUILDARCH/$BUILDREV
+	retrieve $PACKAGEDIR/All $PACKAGELIST packages/`uname -p`/`uname -r`
 fi
 
 TMPDISKUSR=/dev/ram0
