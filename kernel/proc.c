@@ -206,14 +206,25 @@ PRIVATE void idle(void)
 	switch_address_space_idle();
 
 #ifdef CONFIG_SMP
+	get_cpulocal_var(cpu_is_idle) = 1;
 	/* we don't need to keep time on APs as it is handled on the BSP */
 	if (cpuid != bsp_cpu_id)
 		stop_local_timer();
-	get_cpulocal_var(cpu_is_idle) = 1;
+	else
 #endif
+	{
+		/*
+		 * If the timer has expired while in kernel we must
+		 * rearm it before we go to sleep
+		 */
+		restart_local_timer();
+	}
 
 	/* start accounting for the idle time */
 	context_stop(proc_addr(KERNEL));
+#if !SPROFILE
+	halt_cpu();
+#else
 	if (!sprofiling)
 		halt_cpu();
 	else {
@@ -226,6 +237,7 @@ PRIVATE void idle(void)
 		interrupts_disable();
 		*v = 0;
 	}
+#endif
 	/*
 	 * end of accounting for the idle task does not happen here, the kernel
 	 * is handling stuff for quite a while before it gets back here!
