@@ -1,6 +1,6 @@
 diff -ru nbsdsrc/src/common/lib/libc/Makefile.inc common/lib/libc/Makefile.inc
 --- nbsdsrc/src/common/lib/libc/Makefile.inc	Sun Oct 26 07:22:50 2008
-+++ common/lib/libc/Makefile.inc	Fri Apr 29 11:52:59 2011
++++ common/lib/libc/Makefile.inc	Mon Jun  6 14:49:54 2011
 @@ -1,7 +1,11 @@
  # $NetBSD: Makefile.inc,v 1.10 2008/10/26 07:22:50 mrg Exp $
  
@@ -15,7 +15,7 @@ diff -ru nbsdsrc/src/common/lib/libc/Makefile.inc common/lib/libc/Makefile.inc
  .if defined(COMMON_MACHINE_ARCH) && !empty(COMMON_MACHINE_ARCH) && \
 diff -ru nbsdsrc/src/common/lib/libc/arch/i386/atomic/Makefile.inc common/lib/libc/arch/i386/atomic/Makefile.inc
 --- nbsdsrc/src/common/lib/libc/arch/i386/atomic/Makefile.inc	Sun Jan  4 17:54:29 2009
-+++ common/lib/libc/arch/i386/atomic/Makefile.inc	Tue May  3 13:58:29 2011
++++ common/lib/libc/arch/i386/atomic/Makefile.inc	Tue Jun  7 12:05:33 2011
 @@ -1,7 +1,7 @@
  #	$NetBSD: Makefile.inc,v 1.7 2009/01/04 17:54:29 pooka Exp $
  
@@ -27,7 +27,7 @@ diff -ru nbsdsrc/src/common/lib/libc/arch/i386/atomic/Makefile.inc common/lib/li
  	atomic_and_64_nv_cas.c atomic_dec_64_cas.c atomic_dec_64_nv_cas.c \
 diff -ru nbsdsrc/src/common/lib/libc/arch/i386/string/strchr.S common/lib/libc/arch/i386/string/strchr.S
 --- nbsdsrc/src/common/lib/libc/arch/i386/string/strchr.S	Fri Jul 17 19:37:57 2009
-+++ common/lib/libc/arch/i386/string/strchr.S	Fri Apr 29 11:52:59 2011
++++ common/lib/libc/arch/i386/string/strchr.S	Mon Jun  6 14:49:54 2011
 @@ -100,4 +100,8 @@
  	popl	%esi
  	ret
@@ -39,7 +39,7 @@ diff -ru nbsdsrc/src/common/lib/libc/arch/i386/string/strchr.S common/lib/libc/a
 +#endif
 diff -ru nbsdsrc/src/common/lib/libc/arch/i386/string/strrchr.S common/lib/libc/arch/i386/string/strrchr.S
 --- nbsdsrc/src/common/lib/libc/arch/i386/string/strrchr.S	Fri Jul 17 19:37:57 2009
-+++ common/lib/libc/arch/i386/string/strrchr.S	Fri Apr 29 11:52:59 2011
++++ common/lib/libc/arch/i386/string/strrchr.S	Mon Jun  6 14:49:54 2011
 @@ -93,4 +93,8 @@
  	popl	%esi
  	ret
