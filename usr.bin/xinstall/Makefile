@@ -11,13 +11,8 @@ PROG=	xinstall
 SRCS=	xinstall.c getid.c
 MAN=	install.1
 
-.if defined(__MINIX)
-.PATH:		${NETBSDSRCDIR}/nbsd_usr.sbin/mtree
-CPPFLAGS+=	-I${NETBSDSRCDIR}/nbsd_usr.sbin/mtree
-.else
 .PATH:		${NETBSDSRCDIR}/usr.sbin/mtree
 CPPFLAGS+=	-I${NETBSDSRCDIR}/usr.sbin/mtree
-.endif
 
 .if (${HOSTPROG:U} == "")
 DPADD+= ${LIBUTIL}

@@ -63,15 +63,9 @@ CPPFLAGS+=-DSMALL
 SRCS+=printf.c
 .endif
 
-.if defined(__MINIX)
-.PATH:	${.CURDIR}/bltin ${NETBSDSRCDIR}/nbsd_bin/test \
-	${NETBSDSRCDIR}/nbsd_usr.bin/printf \
-	${NETBSDSRCDIR}/nbsd_bin/kill
-.else
 .PATH:	${.CURDIR}/bltin ${NETBSDSRCDIR}/bin/test \
 	${NETBSDSRCDIR}/usr.bin/printf \
 	${NETBSDSRCDIR}/bin/kill
-.endif
 
 CLEANFILES+= ${GENSRCS} ${GENHDRS} y.tab.h
 CLEANFILES+= trace
