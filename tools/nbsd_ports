@@ -6,3 +6,4 @@ usr.bin/m4		src/usr.bin/m4
 usr.bin/indent		src/usr.bin/indent
 usr.bin/stat		src/usr.bin/stat
 usr.bin/uniq		src/usr.bin/uniq
+bin/sleep		src/bin/sleep
