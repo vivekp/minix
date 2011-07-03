@@ -1,0 +1,56 @@
+diff -ru nbsdsrc/src/bin/sleep/sleep.c bin/sleep/sleep.c
+--- nbsdsrc/src/bin/sleep/sleep.c
++++ bin/sleep/sleep.c
+@@ -57,6 +57,11 @@
+ static void usage(void);
+ int main(int, char *[]);
+ 
++#ifndef __minix
++/* 
++ * We don't need report_requested variable anymore as SIGINFO is not
++ * supported in Minix.
++ */
+ static volatile sig_atomic_t report_requested;
+ static void
+ report_request(int signo __unused)
+@@ -64,16 +69,20 @@
+ 
+ 	report_requested = 1;
+ }
++#endif /* !__minix */
+ 
+-
+ int
+ main(int argc, char *argv[])
+ {
+ 	char *arg, *temp;
+ 	double fval, ival, val;
+ 	struct timespec ntime;
++#ifdef __minix
++	int ch, fracflag;
++#else
+ 	time_t original;
+ 	int ch, fracflag, rv;
++#endif
+ 
+ 	setprogname(argv[0]);
+ 	(void)setlocale(LC_ALL, "");
+@@ -125,6 +134,10 @@
+ 		ntime.tv_nsec = 0;
+ 	}
+ 
++#ifdef __minix
++	if (nanosleep(&ntime, NULL) == -1)
++		err(1, "nanosleep failed");
++#else /* !__minix */
+ 	original = ntime.tv_sec;
+ 	signal(SIGINFO, report_request);
+ 	while ((rv = nanosleep(&ntime, &ntime)) != 0) {
+@@ -139,6 +152,7 @@
+ 
+ 	if (rv == -1)
+ 		err(EXIT_FAILURE, "nanosleep failed");
++#endif /* !__minix */
+ 
+ 	return EXIT_SUCCESS;
+ 	/* NOTREACHED */
