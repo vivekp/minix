@@ -7,3 +7,4 @@ usr.bin/indent		src/usr.bin/indent
 bin/cat			src/bin/cat
 bin/echo		src/bin/echo
 bin/sleep		src/bin/sleep
+usr.bin/uniq		src/usr.bin/uniq
