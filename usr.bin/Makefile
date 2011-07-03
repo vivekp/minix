@@ -2,6 +2,6 @@
 
 .include <bsd.own.mk>
 
-SUBDIR= indent m4 mkimage stat
+SUBDIR= indent m4 mkimage stat uniq
 
 .include <bsd.subdir.mk>
