@@ -5,3 +5,4 @@ nbsd_include		src/include
 usr.bin/m4		src/usr.bin/m4
 usr.bin/indent		src/usr.bin/indent
 bin/cat			src/bin/cat
+bin/echo		src/bin/echo

@@ -5,7 +5,7 @@
 YHEADER=1
 PROG=	sh
 
-SHSRCS=	alias.c arith.y arith_lex.l cd.c echo.c error.c eval.c exec.c expand.c \
+SHSRCS=	alias.c arith.y arith_lex.l cd.c error.c eval.c exec.c expand.c \
 	histedit.c input.c jobs.c mail.c main.c memalloc.c miscbltin.c \
 	mystring.c options.c output.c parser.c redir.c show.c \
 	trap.c var.c setmode.c expr.c regexp.c
