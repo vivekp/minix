@@ -1,0 +1,16 @@
+diff -ru nbsdsrc/src/bin/cat/cat.c bin/cat/cat.c
+--- nbsdsrc/src/bin/cat/cat.c
++++ bin/cat/cat.c
+@@ -48,6 +48,12 @@
+ #endif
+ #endif /* not lint */
+ 
++#ifdef __minix
++#ifndef __MINIX_EMULATE_NETBSD_STAT
++#define __MINIX_EMULATE_NETBSD_STAT
++#endif
++#endif /* __minix */
++
+ #include <sys/param.h>
+ #include <sys/stat.h>
+ 
