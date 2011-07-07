@@ -2,6 +2,6 @@
 
 .include <bsd.own.mk>
 
-SUBDIR=
+SUBDIR= ls
 
 .include <bsd.subdir.mk>
