@@ -28,6 +28,7 @@ PRIVATE u16_t pcitab_e1000[] =
     E1000_DEV_ID_ICH10_D_BM_LM,
     E1000_DEV_ID_ICH10_R_BM_LF,
     E1000_DEV_ID_82574L,
+    E1000_DEV_ID_82571EB_COPPER,
     0,
 };
 
@@ -250,11 +251,13 @@ PRIVATE int e1000_probe(e1000_t *e, int skip)
     /* Loop devices on the PCI bus. */
     for(;;)
     {
+	E1000_DEBUG(3, ("%s: probe() devind %d vid 0x%x did 0x%x\n",
+				e->name, devind, vid, did));
+	if (vid != 0x8086)
+		goto get_next;
+
 	for (i = 0; pcitab_e1000[i] != 0; i++)
 	{
-	    if (vid != 0x8086)
-		continue;
-	
 	    if (did != pcitab_e1000[i])
 		continue;
 	    else
@@ -267,6 +270,7 @@ PRIVATE int e1000_probe(e1000_t *e, int skip)
 	    skip--;
 	}
 
+get_next:
 	if (!(r = pci_next_dev(&devind, &vid, &did)))
 	{
 	    return FALSE;
@@ -288,15 +292,14 @@ PRIVATE int e1000_probe(e1000_t *e, int skip)
             e->eeprom_read = eeprom_ich;
             break;
 
-	case E1000_DEV_ID_82574L:
-	case E1000_DEV_ID_82541GI_LF:
-	    e->eeprom_done_bit = (1 << 1);
-	    e->eeprom_addr_off =  2;
+    	case E1000_DEV_ID_82540EM:
+	    e->eeprom_done_bit = (1 << 4);
+	    e->eeprom_addr_off =  8;
 	    break;
 
 	default:
-	    e->eeprom_done_bit = (1 << 4);
-	    e->eeprom_addr_off =  8;
+	    e->eeprom_done_bit = (1 << 1);
+	    e->eeprom_addr_off =  2;
 	    break;
     }
 
@@ -878,7 +881,7 @@ uint32_t reg;
     assert(reg < 0x1ffff);
 
     /* Read from memory mapped register. */
-    value = *(u32_t *)(e->regs + reg);
+    value = *(volatile u32_t *)(e->regs + reg);
 
     /* Return the result. */    
     return value;
@@ -896,7 +899,7 @@ uint32_t value;
     assert(reg < 0x1ffff);
     
     /* Write to memory mapped register. */
-    *(u32_t *)(e->regs + reg) = value;
+    *(volatile u32_t *)(e->regs + reg) = value;
 }
 
 /*===========================================================================*
@@ -942,20 +945,16 @@ void *v;
 int reg;
 {
     e1000_t *e = (e1000_t *) v;
-    u16_t data;
+    u32_t data;
 
     /* Request EEPROM read. */
     e1000_reg_write(e, E1000_REG_EERD,
 		   (reg << e->eeprom_addr_off) | (E1000_REG_EERD_START));
 
     /* Wait until ready. */
-    while (!(e1000_reg_read(e, E1000_REG_EERD) &
-			       e->eeprom_done_bit));
+    while (!(data = (e1000_reg_read(e, E1000_REG_EERD)) & e->eeprom_done_bit));
 
-    /* Fetch data. */
-    data = (e1000_reg_read(e, E1000_REG_EERD) &
-			      E1000_REG_EERD_DATA) >> 16;
-    return data;
+    return data >> 16;
 }
 
 /*===========================================================================* 
