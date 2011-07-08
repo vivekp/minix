@@ -16,7 +16,7 @@ SUBDIR=	aal add_route adduser advent arp ash at autil awk \
 	hostaddr id ifconfig ifdef install \
 	intr ipcrm ipcs irdpd isoread join kill last leave \
 	less lex life loadkeys loadramdisk logger login look lp \
-	lpd ls lspci M mail make  MAKEDEV man \
+	lpd lspci M mail make  MAKEDEV man \
 	mdb mdocml mesg mined mkdep mkdir mkfifo mkfs.mfs mknod \
 	mkproto modem mount mt netconf newroot nice acknm nohup \
 	nonamed od packman passwd paste patch pax \
@@ -25,7 +25,7 @@ SUBDIR=	aal add_route adduser advent arp ash at autil awk \
 	ramdisk rarpd rawspeed rcp rdate readall readclock \
 	readfs reboot remsync rev rget rlogin rlogind rmdir \
 	rotate rsh rshd sed service setup shar size \
-	slip sort spell split srccrc stat strings ackstrip \
+	slip sort spell split srccrc strings ackstrip \
 	stty su sum svclog swapfs swifi sync synctree sysenv \
 	syslogd tail talk talkd tar tcpd tcpdp tcpstat tee telnet \
 	telnetd term termcap tget time tinyhalt top touch tr \

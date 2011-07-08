@@ -1,4 +1,4 @@
-/*	$NetBSD: execl.c,v 1.16 2008/01/09 11:26:03 simonb Exp $	*/
+/*	$NetBSD: extern.h,v 1.16 2006/12/14 20:09:36 he Exp $	*/
 
 /*-
  * Copyright (c) 1991, 1993
@@ -27,60 +27,28 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
+ *
+ *	@(#)extern.h	8.1 (Berkeley) 5/31/93
  */
 
-#include <sys/cdefs.h>
-#if defined(LIBC_SCCS) && !defined(lint)
-#if 0
-static char sccsid[] = "@(#)exec.c	8.1 (Berkeley) 6/4/93";
-#else
-__RCSID("$NetBSD: execl.c,v 1.16 2008/01/09 11:26:03 simonb Exp $");
-#endif
-#endif /* LIBC_SCCS and not lint */
+int	 acccmp(const FTSENT *, const FTSENT *);
+int	 revacccmp(const FTSENT *, const FTSENT *);
+int	 modcmp(const FTSENT *, const FTSENT *);
+int	 revmodcmp(const FTSENT *, const FTSENT *);
+int	 namecmp(const FTSENT *, const FTSENT *);
+int	 revnamecmp(const FTSENT *, const FTSENT *);
+int	 statcmp(const FTSENT *, const FTSENT *);
+int	 revstatcmp(const FTSENT *, const FTSENT *);
+int	 sizecmp(const FTSENT *, const FTSENT *);
+int	 revsizecmp(const FTSENT *, const FTSENT *);
 
-#include "namespace.h"
-#include <errno.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include "reentrant.h"
+int	 ls_main(int, char *[]);
 
-#ifdef __weak_alias
-__weak_alias(execl,_execl)
-#endif
-
-
-extern char **environ;
-
-int
-execl(const char *name, const char *arg, ...)
-{
-	int r;
-#if (defined(__i386__) || defined(__m68k__)) && !defined(__minix)
-	r = execve(name, __UNCONST(&arg), environ);
-	return r;
-#else
-	va_list ap;
-	char **argv;
-	int i;
-
-	va_start(ap, arg);
-	for (i = 2; va_arg(ap, char *) != NULL; i++)
-		continue;
-	va_end(ap);
-
-	if ((argv = alloca(i * sizeof (char *))) == NULL) {
-		errno = ENOMEM;
-		return -1;
-	}
-	
-	va_start(ap, arg);
-	argv[0] = __UNCONST(arg);
-	for (i = 1; (argv[i] = va_arg(ap, char *)) != NULL; i++) 
-		continue;
-	va_end(ap);
-	
-	r = execve(name, argv, environ);
-	return r;
-#endif
-}
+int	 printescaped(const char *);
+void	 printacol(DISPLAY *);
+void	 printcol(DISPLAY *);
+void	 printlong(DISPLAY *);
+void	 printscol(DISPLAY *);
+void	 printstream(DISPLAY *);
+int	 safe_print(const char *);
+void	 usage(void);

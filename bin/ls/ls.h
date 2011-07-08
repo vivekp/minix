@@ -1,8 +1,11 @@
-/*	$NetBSD: execl.c,v 1.16 2008/01/09 11:26:03 simonb Exp $	*/
+/*	$NetBSD: ls.h,v 1.17 2009/02/14 08:02:04 lukem Exp $	*/
 
-/*-
- * Copyright (c) 1991, 1993
+/*
+ * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley by
+ * Michael Fischbein.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,60 +30,58 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
+ *
+ *	@(#)ls.h	8.1 (Berkeley) 5/31/93
  */
 
-#include <sys/cdefs.h>
-#if defined(LIBC_SCCS) && !defined(lint)
-#if 0
-static char sccsid[] = "@(#)exec.c	8.1 (Berkeley) 6/4/93";
-#else
-__RCSID("$NetBSD: execl.c,v 1.16 2008/01/09 11:26:03 simonb Exp $");
+#ifdef __minix
+#ifndef HAVE_STRUCT_STAT_ST_FLAGS
+#define HAVE_STRUCT_STAT_ST_FLAGS	0
 #endif
-#endif /* LIBC_SCCS and not lint */
+#endif	/* __minix */
 
-#include "namespace.h"
-#include <errno.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include "reentrant.h"
 
-#ifdef __weak_alias
-__weak_alias(execl,_execl)
+#define NO_PRINT	1
+
+extern long blocksize;		/* block size units */
+
+extern int f_accesstime;	/* use time of last access */
+#if HAVE_STRUCT_STAT_ST_FLAGS
+extern int f_flags;		/* show flags associated with a file */
 #endif
+extern int f_grouponly;		/* long listing without owner */
+extern int f_humanize;		/* humanize size field */
+extern int f_inode;		/* print inode */
+extern int f_longform;		/* long listing format */
+extern int f_octal;		/* print octal escapes for nongraphic characters */
+extern int f_octal_escape;	/* like f_octal but use C escapes if possible */
+extern int f_sectime;		/* print the real time for all files */
+extern int f_size;		/* list size in short listing */
+extern int f_statustime;	/* use time of last mode change */
+extern int f_type;		/* add type character for non-regular files */
+extern int f_typedir;		/* add type character for directories */
+extern int f_nonprint;		/* show unprintables as ? */
 
+typedef struct {
+	FTSENT *list;
+	u_int64_t btotal;
+	u_int64_t stotal;
+	int entries;
+	unsigned int maxlen;
+	int s_block;
+	int s_flags;
+	int s_group;
+	int s_inode;
+	int s_nlink;
+	int s_size;
+	int s_user;
+	int s_major;
+	int s_minor;
+} DISPLAY;
 
-extern char **environ;
-
-int
-execl(const char *name, const char *arg, ...)
-{
-	int r;
-#if (defined(__i386__) || defined(__m68k__)) && !defined(__minix)
-	r = execve(name, __UNCONST(&arg), environ);
-	return r;
-#else
-	va_list ap;
-	char **argv;
-	int i;
-
-	va_start(ap, arg);
-	for (i = 2; va_arg(ap, char *) != NULL; i++)
-		continue;
-	va_end(ap);
-
-	if ((argv = alloca(i * sizeof (char *))) == NULL) {
-		errno = ENOMEM;
-		return -1;
-	}
-	
-	va_start(ap, arg);
-	argv[0] = __UNCONST(arg);
-	for (i = 1; (argv[i] = va_arg(ap, char *)) != NULL; i++) 
-		continue;
-	va_end(ap);
-	
-	r = execve(name, argv, environ);
-	return r;
-#endif
-}
+typedef struct {
+	char *user;
+	char *group;
+	char *flags;
+	char data[1];
+} NAMES;

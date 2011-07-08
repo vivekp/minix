@@ -1,0 +1,162 @@
+diff -ru nbsdsrc/src/bin/ls/cmp.c bin/ls/cmp.c
+--- nbsdsrc/src/bin/ls/cmp.c
++++ bin/ls/cmp.c
+@@ -41,6 +41,12 @@
+ #endif
+ #endif /* not lint */
+ 
++#ifdef __minix
++#ifndef __MINIX_EMULATE_NETBSD_STAT
++#define __MINIX_EMULATE_NETBSD_STAT
++#endif
++#endif	/* __minix */
++
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ 
+diff -ru nbsdsrc/src/bin/ls/ls.c bin/ls/ls.c
+--- nbsdsrc/src/bin/ls/ls.c
++++ bin/ls/ls.c
+@@ -46,6 +46,13 @@
+ #endif
+ #endif /* not lint */
+ 
++#ifdef __minix
++#ifndef __MINIX_EMULATE_NETBSD_STAT
++#define __MINIX_EMULATE_NETBSD_STAT
++#endif
++#define HAVE_STRUCT_STAT_ST_FLAGS	0
++#endif	/* __minix */
++
+ #include <sys/param.h>
+ #include <sys/types.h>
+ #include <sys/stat.h>
+@@ -88,7 +95,9 @@
+ int f_accesstime;		/* use time of last access */
+ int f_column;			/* columnated format */
+ int f_columnacross;		/* columnated format, sorted across */
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ int f_flags;			/* show flags associated with a file */
++#endif
+ int f_grouponly;		/* long listing without owner */
+ int f_humanize;			/* humanize the size field */
+ int f_inode;			/* print inode */
+@@ -236,9 +245,11 @@
+ 			f_longform = 1;
+ 			f_column = f_columnacross = f_singlecol = f_stream = 0;
+ 			break;
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 		case 'o':
+ 			f_flags = 1;
+ 			break;
++#endif
+ 		case 'p':
+ 			f_typedir = 1;
+ 			break;
+@@ -474,7 +485,9 @@
+ 	const char *user, *group;
+ 	char buf[21];		/* 64 bits == 20 digits, +1 for NUL */
+ 	char nuser[12], ngroup[12];
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 	char *flags = NULL;
++#endif
+ 
+ 	/*
+ 	 * If list is NULL there are two possibilities: that the parent
+@@ -560,12 +573,16 @@
+ 					maxuser = ulen;
+ 				if ((glen = strlen(group)) > maxgroup)
+ 					maxgroup = glen;
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 				if (f_flags) {
+ 					flags =
+ 					    flags_to_string((u_long)sp->st_flags, "-");
+ 					if ((flen = strlen(flags)) > maxflags)
+ 						maxflags = flen;
+ 				} else
++#endif				/* This else will always be executed in case f_flags in 0,
++				 * or disabled as in case of Minix.
++				 */
+ 					flen = 0;
+ 
+ 				if ((np = malloc(sizeof(NAMES) +
+@@ -576,12 +593,13 @@
+ 				(void)strcpy(np->user, user);
+ 				np->group = &np->data[ulen + 1];
+ 				(void)strcpy(np->group, group);
+-
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 				if (f_flags) {
+ 					np->flags = &np->data[ulen + glen + 2];
+ 				  	(void)strcpy(np->flags, flags);
+ 					free(flags);
+ 				}
++#endif
+ 				cur->fts_pointer = np;
+ 			}
+ 		}
+diff -ru nbsdsrc/src/bin/ls/ls.h bin/ls/ls.h
+--- nbsdsrc/src/bin/ls/ls.h
++++ bin/ls/ls.h
+@@ -34,12 +34,21 @@
+  *	@(#)ls.h	8.1 (Berkeley) 5/31/93
+  */
+ 
++#ifdef __minix
++#ifndef HAVE_STRUCT_STAT_ST_FLAGS
++#define HAVE_STRUCT_STAT_ST_FLAGS	0
++#endif
++#endif	/* __minix */
++
++
+ #define NO_PRINT	1
+ 
+ extern long blocksize;		/* block size units */
+ 
+ extern int f_accesstime;	/* use time of last access */
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ extern int f_flags;		/* show flags associated with a file */
++#endif
+ extern int f_grouponly;		/* long listing without owner */
+ extern int f_humanize;		/* humanize size field */
+ extern int f_inode;		/* print inode */
+diff -ru nbsdsrc/src/bin/ls/print.c bin/ls/print.c
+--- nbsdsrc/src/bin/ls/print.c
++++ bin/ls/print.c
+@@ -41,6 +41,13 @@
+ #endif
+ #endif /* not lint */
+ 
++#ifdef __minix
++#ifndef __MINIX_EMULATE_NETBSD_STAT
++#define __MINIX_EMULATE_NETBSD_STAT
++#endif
++#define HAVE_STRUCT_STAT_ST_FLAGS	0
++#endif	/* __minix */
++
+ #include <sys/param.h>
+ #include <sys/stat.h>
+ 
+@@ -125,8 +132,10 @@
+ 		if (!f_grouponly)
+ 			(void)printf("%-*s  ", dp->s_user, np->user);
+ 		(void)printf("%-*s  ", dp->s_group, np->group);
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 		if (f_flags)
+ 			(void)printf("%-*s ", dp->s_flags, np->flags);
++#endif
+ 		if (S_ISCHR(sp->st_mode) || S_ISBLK(sp->st_mode))
+ 			(void)printf("%*lld, %*lld ",
+ 			    dp->s_major, (long long)major(sp->st_rdev),
+@@ -417,9 +426,11 @@
+ 	case S_IFSOCK:
+ 		(void)putchar('=');
+ 		return (1);
++#ifndef __minix
+ 	case S_IFWHT:
+ 		(void)putchar('%');
+ 		return (1);
++#endif
+ 	}
+ 	if (mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+ 		(void)putchar('*');

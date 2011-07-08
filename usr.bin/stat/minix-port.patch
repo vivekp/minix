@@ -1,0 +1,63 @@
+diff -ru nbsdsrc/src/usr.bin/stat/Makefile usr.bin/stat/Makefile
+--- nbsdsrc/src/usr.bin/stat/Makefile
++++ usr.bin/stat/Makefile
+@@ -4,6 +4,11 @@
+ 
+ .if !defined(HOSTPROG)
+ LINKS=	${BINDIR}/stat ${BINDIR}/readlink
++.if defined(__MINIX)
++# To prevent breaking of existing utilities in commands/
++LINKS+=	${BINDIR}/stat ${BINDIR}/fstat
++LINKS+=	${BINDIR}/stat ${BINDIR}/lstat
++.endif
+ MLINKS=	stat.1 readlink.1
+ .endif
+ 
+diff -ru nbsdsrc/src/usr.bin/stat/stat.c usr.bin/stat/stat.c
+--- nbsdsrc/src/usr.bin/stat/stat.c
++++ usr.bin/stat/stat.c
+@@ -38,13 +38,31 @@
+ __RCSID("$NetBSD: stat.c,v 1.33 2011/01/15 22:54:10 njoly Exp $");
+ #endif
+ 
++#ifdef __minix
++#ifndef __MINIX_EMULATE_NETBSD_STAT
++#define __MINIX_EMULATE_NETBSD_STAT
++#endif
++#endif /* __minix */
++
+ #if ! HAVE_NBTOOL_CONFIG_H
++#ifdef __minix
++/* Not supported in Minix. */
++#define HAVE_STRUCT_STAT_ST_FLAGS 0 
++#define HAVE_STRUCT_STAT_ST_GEN 0
++/* Emulated in struct stat, but not supported. */
++#define HAVE_STRUCT_STAT_ST_BIRTHTIME 0 
++#define HAVE_STRUCT_STAT_ST_BIRTHTIMENSEC 0 
++#define HAVE_STRUCT_STAT_ST_MTIMENSEC 0 
++/* Not supported in Minix. */
++#define HAVE_DEVNAME 0 
++#else /* __minix */
+ #define HAVE_STRUCT_STAT_ST_FLAGS 1
+ #define HAVE_STRUCT_STAT_ST_GEN 1
+ #define HAVE_STRUCT_STAT_ST_BIRTHTIME 1
+ #define HAVE_STRUCT_STAT_ST_BIRTHTIMENSEC 1
+ #define HAVE_STRUCT_STAT_ST_MTIMENSEC 1
+ #define HAVE_DEVNAME 1
++#endif /* !__minx */
+ #endif /* HAVE_NBTOOL_CONFIG_H */
+ 
+ #include <sys/types.h>
+@@ -192,6 +210,12 @@
+ 		(void)fputc((c), (s)); \
+ 		(*nl) = ((c) == '\n'); \
+ 	} while (0/*CONSTCOND*/)
++
++#ifdef __minix
++#ifndef S_IFLNK
++#define lstat	stat
++#endif
++#endif /* __minix */
+ 
+ int
+ main(int argc, char *argv[])
