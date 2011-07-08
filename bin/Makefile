@@ -2,6 +2,6 @@
 
 .include <bsd.own.mk>
 
-SUBDIR= cat sleep
+SUBDIR= cat ls sleep
 
 .include <bsd.subdir.mk>

@@ -8,3 +8,4 @@ usr.bin/stat		src/usr.bin/stat
 usr.bin/uniq		src/usr.bin/uniq
 bin/sleep		src/bin/sleep
 bin/cat			src/bin/cat
+bin/ls			src/bin/ls
