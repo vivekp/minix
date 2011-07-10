@@ -2,6 +2,6 @@
 
 .include <bsd.own.mk>
 
-SUBDIR= indent m4 mkimage xinstall
+SUBDIR= mtree
 
 .include <bsd.subdir.mk>
