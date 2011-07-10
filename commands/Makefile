@@ -13,11 +13,11 @@ SUBDIR=	aal add_route adduser advent arp ash at autil awk \
 	ed eject elle elvis env expand factor file \
 	find finger fingerd fix fold format fortune fsck.mfs \
 	ftp101 ftpd200 gcov-pull getty grep gomoku head hexdump host \
-	hostaddr id ifconfig ifdef install \
+	hostaddr id ifconfig ifdef \
 	intr ipcrm ipcs irdpd isoread join kill last leave \
 	less lex life loadkeys loadramdisk logger login look lp \
-	lpd lspci M mail make  MAKEDEV man \
-	mdb mdocml mesg mined mkdep mkdir mkfifo mkfs.mfs mknod \
+	lpd ls lspci M mail make  MAKEDEV man \
+	mdb mdocml mesg mined mkdep mkdir mkfifo mkfs.mfs \
 	mkproto modem mount mt netconf newroot nice acknm nohup \
 	nonamed od packman passwd paste patch pax \
 	ping postinstall poweroff pr prep printf printroot \

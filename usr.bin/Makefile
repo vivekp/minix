@@ -2,6 +2,6 @@
 
 .include <bsd.own.mk>
 
-SUBDIR= indent m4 mkimage stat uniq
+SUBDIR= indent m4 mkimage xinstall stat uniq
 
 .include <bsd.subdir.mk>
