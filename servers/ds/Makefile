@@ -8,6 +8,7 @@ LDADD+=	-lsys
 MAN=
 
 BINDIR?= /usr/sbin
-INSTALLFLAGS+=	-S 16k
-
+#INSTALLFLAGS+=	-S 16k
+install:
+	chmem =16000 ds
 .include <minix.bootprog.mk>

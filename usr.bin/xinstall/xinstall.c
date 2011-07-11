@@ -277,7 +277,7 @@ main(int argc, char *argv[])
 			/* fall through; -S implies -s */
 			/*FALLTHROUGH*/
 		case 's':
-			dostrip = 1;
+			dostrip = 0;
 			break;
 		case 'T':
 			tags = optarg;

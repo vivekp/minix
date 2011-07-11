@@ -8,6 +8,7 @@ LDADD+=	-ldriver -lsys
 MAN=
 
 BINDIR?= /usr/sbin
-INSTALLFLAGS+=	-S 32k
-
+#INSTALLFLAGS+=	-S 32k
+install:
+	chmem =32000 log
 .include <minix.bootprog.mk>

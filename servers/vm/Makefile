@@ -12,7 +12,9 @@ LDADD+=	-lsys
 MAN=
 
 BINDIR?= /usr/sbin
-INSTALLFLAGS+=	-S 128k
+#INSTALLFLAGS+=	-S 128k
+install:
+	chmem =128000 vm
 
 CPPFLAGS+= -I${.CURDIR} -I${.CURDIR}/arch/${ARCH}
 CPPFLAGS+=	-I${MINIXSRCDIR}

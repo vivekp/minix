@@ -12,6 +12,8 @@ LDADD+=	-lsys -ltimers -lexec
 MAN=
 
 BINDIR?= /usr/sbin
-INSTALLFLAGS+=	-S 16k
+#INSTALLFLAGS+=	-S 16k
+install:
+	chmem =16000 vfs
 
 .include <minix.bootprog.mk>

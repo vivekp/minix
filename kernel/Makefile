@@ -38,7 +38,10 @@ DPADD+=	${LIBC}
 CPPFLAGS+=	-I${.CURDIR} -I${.CURDIR}/arch/${ARCH}/include -I${MINIXSRCDIR}
 AFLAGS+=	-I${.CURDIR} -I${.CURDIR}/arch/${ARCH}/include -I${MINIXSRCDIR}
 
-INSTALLFLAGS+=	-S 0
+#INSTALLFLAGS+=	-S 0
+install:
+	chmem =0 kernel 
+
 BINDIR=	/usr/sbin
 MAN=
 
