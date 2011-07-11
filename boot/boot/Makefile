@@ -27,5 +27,6 @@ MAN=
 
 realall: .PHONY bootsize
 bootsize: boot
-#	chmem =106646 boot 
-#	${INSTALL} boot
+#	${INSTALL} -S 12kb boot
+install:
+	chmem =12000 boot
