@@ -1,0 +1,330 @@
+diff -ru nbsdsrc/src/usr.sbin/mtree/compare.c usr.sbin/mtree/compare.c
+--- nbsdsrc/src/usr.sbin/mtree/compare.c
++++ usr.sbin/mtree/compare.c
+@@ -42,6 +42,10 @@
+ #endif
+ #endif /* not lint */
+ 
++#ifdef __minix
++#include <utime.h>
++#endif
++
+ #include <sys/param.h>
+ 
+ #include <errno.h>
+@@ -128,7 +132,11 @@
+ int
+ compare(NODE *s, FTSENT *p)
+ {
++#if !(HAVE_STRUCT_STAT_ST_FLAGS)
++	u_int32_t len, val;
++#else
+ 	u_int32_t len, val, flags;
++#endif
+ 	int fd, label;
+ 	const char *cp, *tab;
+ #if !defined(NO_MD5) || !defined(NO_RMD160) || !defined(NO_SHA1) || !defined(NO_SHA2)
+@@ -199,8 +207,13 @@
+ 			    (mknod(p->fts_accpath,
+ 			      s->st_mode | nodetoino(s->type),
+ 			      s->st_rdev) == -1) ||
++#ifdef __minix
++			    (chown(p->fts_accpath, p->fts_statp->st_uid,
++			      p->fts_statp->st_gid) == -1) )
++#else		
+ 			    (lchown(p->fts_accpath, p->fts_statp->st_uid,
+ 			      p->fts_statp->st_gid) == -1) )
++#endif
+ 				printf(", not modified: %s)\n",
+ 				    strerror(errno));
+ 			 else
+@@ -215,9 +228,15 @@
+ 		printf("%suser (%lu, %lu",
+ 		    tab, (u_long)s->st_uid, (u_long)p->fts_statp->st_uid);
+ 		if (uflag) {
++#ifdef __minix
++			if (chown(p->fts_accpath, s->st_uid, -1))
++				printf(", not modified: %s)\n",
++				    strerror(errno));
++#else	
+ 			if (lchown(p->fts_accpath, s->st_uid, -1))
+ 				printf(", not modified: %s)\n",
+ 				    strerror(errno));
++#endif
+ 			else
+ 				printf(", modified)\n");
+ 		} else
+@@ -229,9 +248,15 @@
+ 		printf("%sgid (%lu, %lu",
+ 		    tab, (u_long)s->st_gid, (u_long)p->fts_statp->st_gid);
+ 		if (uflag) {
++#ifdef __minix
++			if (chown(p->fts_accpath, -1, s->st_gid))
++				printf(", not modified: %s)\n",
++				    strerror(errno));
++#else
+ 			if (lchown(p->fts_accpath, -1, s->st_gid))
+ 				printf(", not modified: %s)\n",
+ 				    strerror(errno));
++#endif
+ 			else
+ 				printf(", modified)\n");
+ 		}
+@@ -262,7 +287,11 @@
+ 		    tab, (u_long)s->st_mode,
+ 		    (u_long)p->fts_statp->st_mode & MBITS);
+ 		if (uflag) {
++#ifdef __minix
++			if (chmod(p->fts_accpath, s->st_mode))
++#else
+ 			if (lchmod(p->fts_accpath, s->st_mode))
++#endif
+ 				printf(", not modified: %s)\n",
+ 				    strerror(errno));
+ 			else
+@@ -322,9 +351,18 @@
+ 			printf("%.24s", ctime(&pmtime));
+ 			if (tflag) {
+ 				tv[1] = tv[0];
++#ifdef __minix
++				struct utimbuf times[1];
++				times[0].actime = tv[0].tv_sec;	/* smtime */
++				times[0].modtime = tv[1].tv_sec; /* smtime */
++				if (utime(p->fts_accpath, times))
++					printf(", not modified: %s)\n",
++					    strerror(errno));
++#else
+ 				if (utimes(p->fts_accpath, tv))
+ 					printf(", not modified: %s)\n",
+ 					    strerror(errno));
++#endif
+ 				else
+ 					printf(", modified)\n");
+ 			} else
+diff -ru nbsdsrc/src/usr.sbin/mtree/create.c usr.sbin/mtree/create.c
+--- nbsdsrc/src/usr.sbin/mtree/create.c
++++ usr.sbin/mtree/create.c
+@@ -81,12 +81,18 @@
+ static gid_t gid;
+ static uid_t uid;
+ static mode_t mode;
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ static u_long flags;
++#endif
+ 
+ static int	dcmp(const FTSENT **, const FTSENT **);
+ static void	output(int *, const char *, ...)
+ 	__attribute__((__format__(__printf__, 2, 3)));
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ static int	statd(FTS *, FTSENT *, uid_t *, gid_t *, mode_t *, u_long *);
++#else
++static int	statd(FTS *, FTSENT *, uid_t *, gid_t *, mode_t *);
++#endif
+ static void	statf(FTSENT *);
+ 
+ void
+@@ -126,7 +132,11 @@
+ 		switch(p->fts_info) {
+ 		case FTS_D:
+ 			printf("\n# %s\n", p->fts_path);
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 			statd(t, p, &uid, &gid, &mode, &flags);
++#else
++			statd(t, p, &uid, &gid, &mode);
++#endif
+ 			statf(p);
+ 			break;
+ 		case FTS_DP:
+@@ -283,28 +293,42 @@
+ #define	MTREE_MAXS 16
+ 
+ static int
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ statd(FTS *t, FTSENT *parent, uid_t *puid, gid_t *pgid, mode_t *pmode,
+       u_long *pflags)
++#else
++statd(FTS *t, FTSENT *parent, uid_t *puid, gid_t *pgid, mode_t *pmode)
++#endif
+ {
+ 	FTSENT *p;
+ 	gid_t sgid;
+ 	uid_t suid;
+ 	mode_t smode;
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 	u_long sflags = 0;
++#endif
+ 	const char *name;
+ 	gid_t savegid;
+ 	uid_t saveuid;
+ 	mode_t savemode;
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 	u_long saveflags;
+ 	u_short maxgid, maxuid, maxmode, maxflags;
+ 	u_short g[MTREE_MAXGID], u[MTREE_MAXUID],
+ 		m[MTREE_MAXMODE], f[MTREE_MAXFLAGS];
++#else
++	u_short maxgid, maxuid, maxmode;
++	u_short g[MTREE_MAXGID], u[MTREE_MAXUID],
++		m[MTREE_MAXMODE];
++#endif
+ 	static int first = 1;
+ 
+ 	savegid = *pgid;
+ 	saveuid = *puid;
+ 	savemode = *pmode;
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 	saveflags = *pflags;
++#endif
+ 	if ((p = fts_children(t, 0)) == NULL) {
+ 		if (errno)
+ 			mtree_err("%s: %s", RP(parent), strerror(errno));
+@@ -314,9 +338,12 @@
+ 	memset(g, 0, sizeof(g));
+ 	memset(u, 0, sizeof(u));
+ 	memset(m, 0, sizeof(m));
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 	memset(f, 0, sizeof(f));
+-
+ 	maxuid = maxgid = maxmode = maxflags = 0;
++#else
++	maxuid = maxgid = maxmode = 0;
++#endif	
+ 	for (; p; p = p->fts_link) {
+ 		smode = p->fts_statp->st_mode & MBITS;
+ 		if (smode < MTREE_MAXMODE && ++m[smode] > maxmode) {
+@@ -324,9 +351,9 @@
+ 			maxmode = m[smode];
+ 		}
+ 		sgid = p->fts_statp->st_gid;
+-		if (sgid < MTREE_MAXGID && ++g[sgid] > maxgid) {
++		if (sgid < MTREE_MAXGID && ++g[(int)sgid] > maxgid) {
+ 			savegid = sgid;
+-			maxgid = g[sgid];
++			maxgid = g[(int)sgid];
+ 		}
+ 		suid = p->fts_statp->st_uid;
+ 		if (suid < MTREE_MAXUID && ++u[suid] > maxuid) {
+@@ -350,7 +377,9 @@
+ 	if (((keys & (F_UNAME | F_UID)) && (*puid != saveuid)) ||
+ 	    ((keys & (F_GNAME | F_GID)) && (*pgid != savegid)) ||
+ 	    ((keys & F_MODE) && (*pmode != savemode)) || 
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 	    ((keys & F_FLAGS) && (*pflags != saveflags)) ||
++#endif
+ 	    first) {
+ 		first = 0;
+ 		printf("/set type=file");
+@@ -372,14 +401,18 @@
+ 			printf(" mode=%#lo", (u_long)savemode);
+ 		if (keys & F_NLINK)
+ 			printf(" nlink=1");
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 		if (keys & F_FLAGS)
+ 			printf(" flags=%s",
+ 			    flags_to_string(saveflags, "none"));
++#endif
+ 		printf("\n");
+ 		*puid = saveuid;
+ 		*pgid = savegid;
+ 		*pmode = savemode;
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 		*pflags = saveflags;
++#endif
+ 	}
+ 	return (0);
+ }
+diff -ru nbsdsrc/src/usr.sbin/mtree/extern.h usr.sbin/mtree/extern.h
+--- nbsdsrc/src/usr.sbin/mtree/extern.h
++++ usr.sbin/mtree/extern.h
+@@ -36,7 +36,11 @@
+ #if HAVE_NBTOOL_CONFIG_H
+ #include "nbtool_config.h"
+ #else 
++#ifdef __minix
++#define HAVE_STRUCT_STAT_ST_FLAGS 0
++#else /* __minix */
+ #define HAVE_STRUCT_STAT_ST_FLAGS 1
++#endif /* !__minix */
+ #endif
+  
+ #include <err.h> 
+diff -ru nbsdsrc/src/usr.sbin/mtree/spec.c usr.sbin/mtree/spec.c
+--- nbsdsrc/src/usr.sbin/mtree/spec.c
++++ usr.sbin/mtree/spec.c
+@@ -314,7 +314,9 @@
+ 	NODE	*cur;
+ 	char	path[MAXPATHLEN];
+ 	const char *name;
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 	char	*str;
++#endif
+ 	char	*p, *q;
+ 
+ 	for (cur = root; cur != NULL; cur = cur->next) {
+@@ -375,11 +377,13 @@
+ 			appendfield(pathlast, "sha384=%s", cur->sha384digest);
+ 		if (MATCHFLAG(F_SHA512))
+ 			appendfield(pathlast, "sha512=%s", cur->sha512digest);
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 		if (MATCHFLAG(F_FLAGS)) {
+ 			str = flags_to_string(cur->st_flags, "none");
+ 			appendfield(pathlast, "flags=%s", str);
+ 			free(str);
+ 		}
++#endif
+ 		if (MATCHFLAG(F_IGN))
+ 			appendfield(pathlast, "ignore");
+ 		if (MATCHFLAG(F_OPT))
+@@ -542,6 +546,7 @@
+ 		case F_DEV:
+ 			ip->st_rdev = parsedev(val);
+ 			break;
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 		case F_FLAGS:
+ 			if (strcmp("none", val) == 0)
+ 				ip->st_flags = 0;
+@@ -549,6 +554,7 @@
+ 			    != 0)
+ 				mtree_err("invalid flag `%s'", val);
+ 			break;
++#endif
+ 		case F_GID:
+ 			ip->st_gid = (gid_t)strtoul(val, &ep, 10);
+ 			if (*ep)
+diff -ru nbsdsrc/src/usr.sbin/mtree/verify.c usr.sbin/mtree/verify.c
+--- nbsdsrc/src/usr.sbin/mtree/verify.c
++++ usr.sbin/mtree/verify.c
+@@ -167,7 +167,9 @@
+ 	int create;
+ 	char *tp;
+ 	const char *type;
++#if HAVE_STRUCT_STAT_ST_FLAGS
+ 	u_int32_t flags;
++#endif
+ 
+ 	for (; p; p = p->next) {
+ 		if (p->flags & F_OPT && !(p->flags & F_VISIT))
+@@ -266,7 +268,11 @@
+ 			continue;
+ 		if ((p->flags & (F_UID | F_UNAME)) &&
+ 		    (p->flags & (F_GID | F_GNAME)) &&
++#ifdef __minix
++		    (chown(path, p->st_uid, p->st_gid))) {
++#else
+ 		    (lchown(path, p->st_uid, p->st_gid))) {
++#endif		
+ 			printf("%s: user/group/mode not modified: %s\n",
+ 			    path, strerror(errno));
+ 			printf("%s: warning: file mode %snot set\n", path,
+@@ -274,7 +280,11 @@
+ 			continue;
+ 		}
+ 		if (p->flags & F_MODE) {
++#ifdef __minix
++			if (chmod(path, p->st_mode))
++#else
+ 			if (lchmod(path, p->st_mode))
++#endif
+ 				printf("%s: permissions not set: %s\n",
+ 				    path, strerror(errno));
+ 		}
