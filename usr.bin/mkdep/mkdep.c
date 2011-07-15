@@ -312,17 +312,24 @@ main(int argc, char **argv)
 			/* consume all args... */
 			argv += argc;
 		}
-
 		sz = lseek(fd, 0, SEEK_END);
 		if (sz == 0) {
 			close(fd);
 			continue;
 		}
-		buf = mmap(NULL, sz, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+#ifdef __minix
+		buf = (char *)malloc(sz);
+		int size = read(fd, buf, sz);	
+		if(size == -1)
+			err(EXIT_FAILURE, "unable to read from fd into buffer");
+#else			
+		buf = mmap(NULL, sz, PROT_WRITE, MAP_PRIVATE, fd, 0);
 		close(fd);
 
 		if (buf == MAP_FAILED)
 			err(EXIT_FAILURE, "unable to mmap file %s", fname);
+#endif
+
 		lim = buf + sz - 1;
 
 		/* Remove leading "./" from filenames */
@@ -402,7 +409,9 @@ main(int argc, char **argv)
 				save_for_optional(colon + 1, eol);
 			line = eol;
 		}
+#ifndef __minix
 		munmap(buf, sz);
+#endif
 	}
 
 	if (oflag && opt != NULL) {

@@ -1,4 +1,4 @@
-#	$NetBSD: bsd.dep.mk,v 1.68 2008/10/25 22:27:36 apb Exp $
+#	$NetBSD: bsd.dep.mk,v 1.70 2011/01/12 23:12:11 joerg Exp $
 
 ##### Basic targets
 cleandir:	cleandepend
@@ -32,43 +32,35 @@ ${__DPSRCS.d}: ${__DPSRCS.notd} ${DPSRCS}
 .depend: ${__DPSRCS.d}
 	${_MKTARGET_CREATE}
 	rm -f .depend
-#	${MKDEP} -d -f ${.TARGET} -s ${MKDEP_SUFFIXES:Q} ${__DPSRCS.d}
-	cat ${__DPSRCS.d} > ${.TARGET}
+	${MKDEP} -d -f ${.TARGET} -s ${MKDEP_SUFFIXES:Q} ${__DPSRCS.d}
 
 .SUFFIXES: .d .s .S .c .C .cc .cpp .cxx .m
 
 .c.d:
 	${_MKTARGET_CREATE}
-#	${MKDEP} -f ${.TARGET} -- ${MKDEPFLAGS} \
-#	    ${CFLAGS:C/-([IDU])[  ]*/-\1/Wg:M-[IDU]*} \
-#	    ${CPPFLAGS} ${CPPFLAGS.${.IMPSRC:T}} ${.IMPSRC}
-#	mkdep -- ${MKDEPFLAGS} \
-#	    ${CFLAGS:C/-([IDU])[  ]*/-\1/Wg:M-[IDU]*} \
-#	    ${CPPFLAGS} ${CPPFLAGS.${.IMPSRC:T}} ${.IMPSRC} > ${.TARGET}
-	mkdep "$(CC)  ${CFLAGS:C/-([IDU])[  ]*/-\1/Wg:M-[IDU]*} \
-	${CPPFLAGS} ${CPPFLAGS.${.IMPSRC:T}} -E" ${.IMPSRC} > ${.TARGET}
+	${MKDEP} -f ${.TARGET} -- ${MKDEPFLAGS} \
+	    ${CFLAGS:C/-([IDU])[  ]*/-\1/Wg:M-[IDU]*} \
+	    ${CPPFLAGS} ${CPPFLAGS.${.IMPSRC:T}} ${.IMPSRC}
 
-# .m.d:
-# 	${_MKTARGET_CREATE}
-# 	${MKDEP} -f ${.TARGET} -- ${MKDEPFLAGS} \
-# 	    ${OBJCFLAGS:C/-([IDU])[  ]*/-\1/Wg:M-[IDU]*} \
-# 	    ${CPPFLAGS} ${CPPFLAGS.${.IMPSRC:T}} ${.IMPSRC}
+.m.d:
+	${_MKTARGET_CREATE}
+	${MKDEP} -f ${.TARGET} -- ${MKDEPFLAGS} \
+	    ${OBJCFLAGS:C/-([IDU])[  ]*/-\1/Wg:M-[IDU]*} \
+	    ${CPPFLAGS} ${CPPFLAGS.${.IMPSRC:T}} ${.IMPSRC}
 
 .s.d .S.d:
 	${_MKTARGET_CREATE}
-#	 ${MKDEP} -f ${.TARGET} -- ${MKDEPFLAGS} \
-#	     ${AFLAGS:C/-([IDU])[  ]*/-\1/Wg:M-[IDU]*} \
-#	     ${CPPFLAGS} ${CPPFLAGS.${.IMPSRC:T}} ${__acpp_flags} ${.IMPSRC}
-	mkdep "$(CC) ${AFLAGS:C/-([IDU])[  ]*/-\1/Wg:M-[IDU]*} \
-	${CPPFLAGS} ${CPPFLAGS.${.IMPSRC:T}} -E" ${.IMPSRC} > ${.TARGET}
+	${MKDEP} -f ${.TARGET} -- ${MKDEPFLAGS} \
+	    ${AFLAGS:C/-([IDU])[  ]*/-\1/Wg:M-[IDU]*} \
+	    ${CPPFLAGS} ${CPPFLAGS.${.IMPSRC:T}} ${__acpp_flags} ${.IMPSRC}
 
-# .C.d .cc.d .cpp.d .cxx.d:
-# 	${_MKTARGET_CREATE}
-# 	${MKDEP} -f ${.TARGET} -- ${MKDEPFLAGS} \
-# 	    ${CXXFLAGS:C/-([IDU])[  ]*/-\1/Wg:M-[IDU]*} \
-# 	    ${DESTDIR:D-nostdinc++ ${CPPFLAG_ISYSTEMXX} \
-# 			${DESTDIR}/usr/include/g++} \
-# 	    ${CPPFLAGS} ${CPPFLAGS.${.IMPSRC:T}} ${.IMPSRC}
+.C.d .cc.d .cpp.d .cxx.d:
+	${_MKTARGET_CREATE}
+	${MKDEP} -f ${.TARGET} -- ${MKDEPFLAGS} \
+	    ${CXXFLAGS:C/-([IDU])[  ]*/-\1/Wg:M-[IDU]*} \
+	    ${DESTDIR:D-nostdinc++ ${CPPFLAG_ISYSTEMXX} \
+			${DESTDIR}/usr/include/g++} \
+	    ${CPPFLAGS} ${CPPFLAGS.${.IMPSRC:T}} ${.IMPSRC}
 
 .endif # defined(SRCS)							# }
 
@@ -79,10 +71,10 @@ cleandepend: .PHONY
 .endif
 
 ##### Custom rules
-# .if !target(tags)
-# tags: ${SRCS}
-# .if defined(SRCS)
-# 	-cd ${.CURDIR}; ctags -f /dev/stdout ${.ALLSRC:N*.h} | \
-# 	    ${TOOL_SED} "s;\${.CURDIR}/;;" > tags
-# .endif
-# .endif
+.if !target(tags)
+tags: ${SRCS}
+.if defined(SRCS)
+	-cd "${.CURDIR}"; ctags -f /dev/stdout ${.ALLSRC:N*.h} | \
+	    ${TOOL_SED} "s;\${.CURDIR}/;;" > tags
+.endif
+.endif
