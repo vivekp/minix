@@ -6,13 +6,13 @@
 /* INCLUDES HERE */
 
 #ifdef __weak_alias
-__weak_alias(mmap, _mmap)
-__weak_alias(munmap, _munmap)
-__weak_alias(munmap_text, _munmap_text)
 __weak_alias(vm_remap, _vm_remap)
 __weak_alias(vm_unmap, _vm_unmap)
 __weak_alias(vm_getphys, _vm_getphys)
 __weak_alias(vm_getrefcount, _vm_getrefcount)
+__weak_alias(minix_mmap, _minix_mmap)
+__weak_alias(minix_munmap, _minix_munmap)
+__weak_alias(minix_munmap_text, _minix_munmap_text)
 #endif
 
 
@@ -21,7 +21,7 @@ __weak_alias(vm_getrefcount, _vm_getrefcount)
 #include <string.h>
 #include <errno.h>
 
-PUBLIC void *mmap(void *addr, size_t len, int prot, int flags,
+PUBLIC void *minix_mmap(void *addr, size_t len, int prot, int flags,
 	int fd, off_t offset)
 {
 	message m;
@@ -43,7 +43,7 @@ PUBLIC void *mmap(void *addr, size_t len, int prot, int flags,
 	return (void *) m.VMM_RETADDR;
 }
 
-PUBLIC int munmap(void *addr, size_t len)
+PUBLIC int minix_munmap(void *addr, size_t len)
 {
 	message m;
 
@@ -54,7 +54,7 @@ PUBLIC int munmap(void *addr, size_t len)
 }
 
 
-PUBLIC int munmap_text(void *addr, size_t len)
+PUBLIC int minix_munmap_text(void *addr, size_t len)
 {
 	message m;
 
