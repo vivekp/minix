@@ -6,6 +6,7 @@ LIBM_DIR=	nbsd_libm
 LIBCOMPAT_DIR=	nbsd_libcompat_minix
 LIBMINLIB_DIR=	nbsd_libminlib
 LIBASYN_DIR=	nbsd_libasyn
+LIBEDIT_DIR=	nbsd_libedit
 .endif
 
 LIBC_DIR?=	libc
@@ -13,9 +14,10 @@ LIBM_DIR?=	libm
 LIBCOMPAT_DIR?=
 LIBMINLIB_DIR?=
 LIBASYN_DIR?=
+LIBEDIT_DIR?=	libedit
 
-SUBDIR= csu ${LIBCOMPAT_DIR} ${LIBC_DIR} libcurses libdriver libnetdriver \
-	libedit ${LIBM_DIR} libsys libtimers libutil libbz2 libl libhgfs  \
+SUBDIR= csu ${LIBCOMPAT_DIR} ${LIBC_DIR} libcurses libdriver  libnetdriver \
+	${LIBEDIT_DIR} ${LIBM_DIR} libsys libtimers libterminfo libutil libbz2 libl libhgfs  \
 	libz libfetch libarchive libvtreefs libaudiodriver libmthread     \
 	libexec libdevman libusb ${LIBMINLIB_DIR} ${LIBASYN_DIR}          \
 	libddekit
