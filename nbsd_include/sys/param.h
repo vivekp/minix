@@ -141,6 +141,10 @@
  * made larger without any effect on existing file systems; however making
  * it smaller may make some file systems unmountable.
  */
+#ifndef MAXPHYS
+#define MAXPHYS		(64 * 1024)	/* max raw I/O transfer size */
+#endif
+
 #ifndef MAXBSIZE				/* XXX */
 #define	MAXBSIZE	MAXPHYS
 #endif
