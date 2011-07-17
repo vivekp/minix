@@ -2,6 +2,6 @@
 
 .include <bsd.own.mk>
 
-SUBDIR= mtree
+SUBDIR= pwd_mkdb
 
 .include <bsd.subdir.mk>
