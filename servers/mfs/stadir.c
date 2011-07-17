@@ -1,4 +1,6 @@
 #include "fs.h"
+#include <string.h>
+#include <assert.h>
 #include <sys/stat.h>
 #include <sys/statfs.h>
 #include <sys/statvfs.h>
@@ -6,6 +8,24 @@
 #include "super.h"
 #include <minix/vfsif.h>
 
+PRIVATE int copy_new_to_old_stat(endpoint_t who_e,
+	cp_grant_id_t gid, struct stat *st)
+{
+	struct minix_prev_stat prevst;
+
+  	memset(&prevst, 0, sizeof(prevst));
+
+	prevst.st_dev = st->st_dev;
+	prevst.st_ino = st->st_ino;
+	prevst.st_mode = st->st_mode;
+	prevst.st_uid = st->st_uid;
+	prevst.st_gid = st->st_gid;
+	prevst.st_size = st->st_size;
+	prevst.st_rdev = st->st_rdev;
+
+	return sys_safecopyto(who_e, gid, (vir_bytes) 0, (vir_bytes) &prevst,
+  		(size_t) sizeof(prevst), D);
+}
 
 /*===========================================================================*
  *				stat_inode				     *
@@ -21,6 +41,7 @@ PRIVATE int stat_inode(
   struct stat statbuf;
   mode_t mo;
   int r, s;
+  u32_t blocks; /* The unit of this is 512 */
 
   /* Update the atime, ctime, and mtime fields in the inode, if need be. */
   if (rip->i_update) update_times(rip);
@@ -30,6 +51,12 @@ PRIVATE int stat_inode(
 
   /* true iff special */
   s = (mo == I_CHAR_SPECIAL || mo == I_BLOCK_SPECIAL);
+
+  blocks = rip->i_size / 512;
+  if (rip->i_size % 512 != 0)
+	blocks += 1;
+
+  memset(&statbuf, 0, sizeof(struct stat));
 
   statbuf.st_dev = rip->i_dev;
   statbuf.st_ino = rip->i_num;
@@ -42,14 +69,22 @@ PRIVATE int stat_inode(
   statbuf.st_atime = rip->i_atime;
   statbuf.st_mtime = rip->i_mtime;
   statbuf.st_ctime = rip->i_ctime;
+  statbuf.st_blksize = fs_block_size;
+  statbuf.st_blocks = blocks;
 
   /* Copy the struct to user space. */
   r = sys_safecopyto(who_e, gid, (vir_bytes) 0, (vir_bytes) &statbuf,
   		(size_t) sizeof(statbuf), D);
+
+  /* Fallback for older VFS (old stat) */
+  if(r != OK) {
+  	r = copy_new_to_old_stat(who_e, gid, &statbuf);
+	if(r == OK) printf("MFS: old vfs stat fallback ok\n");
+	else	printf("MFS: old vfs stat fallback failed\n");
+  }
   
   return(r);
 }
-
 
 /*===========================================================================*
  *				fs_fstatfs				     *

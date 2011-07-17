@@ -35,7 +35,9 @@ typedef	__off_t		off_t;		/* file offset */
  * Flags contain sharing type and options.
  * Sharing types; choose one.
  */
+#ifndef __minix
 #define	MAP_SHARED	0x0001	/* share changes */
+#endif
 #define	MAP_PRIVATE	0x0002	/* changes are private */
 
 /*
@@ -52,6 +54,7 @@ typedef	__off_t		off_t;		/* file offset */
 #define MAP_ALIGN64K	0x0040		/* physically aligned at 64kB */
 #define MAP_LOWER1M	0x0080		/* physically below 16MB */
 #define	MAP_ALIGNMENT_64KB	MAP_ALIGN64K
+#define	MAP_IPC_SHARED	0x0100	/* share changes */
 
 /*
  * Error indicator returned by mmap(2)
@@ -61,11 +64,13 @@ typedef	__off_t		off_t;		/* file offset */
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
+#ifndef __minix
 void *	mmap(void *, size_t, int, int, int, off_t);
 int	munmap(void *, size_t);
-
-#ifdef __minix
-int 		munmap_text(void *, size_t);
+#else
+void *	minix_mmap(void *, size_t, int, int, int, off_t);
+int	minix_munmap(void *, size_t);
+int 		minix_munmap_text(void *, size_t);
 void *		vm_remap(int d, int s, void *da, void *sa, size_t si);
 int 		vm_unmap(int endpt, void *addr);
 unsigned long 	vm_getphys(int endpt, void *addr);

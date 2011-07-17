@@ -2,9 +2,14 @@
 # Minimal libc for servers and drivers.
 #
 
+.include <bsd.own.mk>
+
+LIB=		minc
+
+CPPFLAGS.sched_start.c+=	-I${MINIXSRCDIR}
+
 LIBCSRCDIR=${MINIXSRCDIR}/lib/nbsd_libc
 
-.if (${NBSD_LIBC} != "no")
 MACHINE_ARCH=${MACHINE}
 
 #
@@ -68,9 +73,9 @@ CPPFLAGS.${i}+= -I${LIBCSRCDIR}/stdlib -I${LIBCSRCDIR}/include
 .endfor
 # Import from gen
 
-errlist.c: ${LIBCSRCDIR}/gen/errlist-minix.awk \
+errlist.c: ${LIBCSRCDIR}/gen/errlist.awk \
 	   ${MINIXSRCDIR}/nbsd_include/sys/errno.h
-	${TOOL_AWK} -f ${.ALLSRC} > ${.TARGET}
+	cat ${MINIXSRCDIR}/nbsd_include/sys/errno.h | ${TOOL_SED} 's/(_SIGN//' | ${TOOL_AWK} -f ${LIBCSRCDIR}/gen/errlist.awk > ${.TARGET}
 
 .for i in assert.c _errno.c errno.c _env.c errlist.c \
 	execle.c getprogname.c sleep.c time.c \
@@ -133,4 +138,4 @@ CPPFLAGS.${i}+= -I${LIBCSRCDIR}/include
 
 CPPFLAGS+= -D_LIBSYS
 
-.endif
+.include <bsd.lib.mk>

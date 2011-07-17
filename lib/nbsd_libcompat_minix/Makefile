@@ -33,7 +33,7 @@ SRCS+= termcap.c
 # Minix legacy passwd format
 # These should be removed when we switch to
 # NetBSD's 'passwd' db-based format.
-SRCS+= crypt.c getpwent.c
+SRCS+= getpwent.c
 
 # fttyslot(fd), a Minix-specific extension
 SRCS+= fttyslot.c
@@ -41,6 +41,11 @@ SRCS+= fttyslot.c
 # cuserid()
 # Now considered "compat" feature in NetBSD.
 SRCS+= cuserid.c
+
+# XXX: hack
+# user_from_uid(), uid_from_user()
+# group_from_gid(), gid_from_group()
+SRCS+= passwd.c
 
 .include "include/Makefile.inc"
 
