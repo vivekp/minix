@@ -265,7 +265,11 @@ pw_edit(int notsetuid, const char *filename)
 	sprintf(p, "%s %s", editor, filename);
 	argp[2] = p;
 
+#ifdef __minix
+	switch(editpid = fork()) {
+#else
 	switch(editpid = vfork()) {
+#endif
 	case -1:
 		free(p);
 		return;
