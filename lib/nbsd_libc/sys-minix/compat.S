@@ -84,4 +84,6 @@ MY_ALIAS(getutmp, __getutmp50)
 MY_ALIAS(getutmpx, __getutmpx50)
 MY_ALIAS(utime, __utime50)
 MY_ALIAS(unvis, __unvis13)
-MY_ALIAS(__pw_scan50, __pw_scan);
+MY_ALIAS(__pw_scan50, __pw_scan)
+MY_ALIAS(getpwnam, __getpwnam50)
+MY_ALIAS(_sys_read, _read)
