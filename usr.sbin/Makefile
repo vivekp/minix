@@ -2,6 +2,6 @@
 
 .include <bsd.own.mk>
 
-SUBDIR= pwd_mkdb
+SUBDIR= pwd_mkdb vipw
 
 .include <bsd.subdir.mk>
