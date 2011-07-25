@@ -141,7 +141,10 @@ int
 main(int argc, char *argv[])
 {
 	struct group *gr;
+#ifndef __minix
+	/* unused variable */
 	struct stat st;
+#endif
 	int ask, ch, cnt, fflag, hflag, pflag, sflag, quietlog, rootlogin, rval;
 	int Fflag;
 	uid_t uid, saved_uid;
@@ -433,12 +436,13 @@ main(int argc, char *argv[])
 		(void)setpriority(PRIO_PROCESS, 0, 0);
 
 	ttycheck:
+#ifndef __minix
+		/* Only console is secure in Minix */
+
 		/*
 		 * If trying to log in as root without Kerberos,
 		 * but with insecure terminal, refuse the login attempt.
 		 */
-		printf("pw_name: %s\npw_passwd: %s\npw_uid: %d\npw_shell: %s\nrval: %d\nrootlogin: %d\n", pwd->pw_name, pwd->pw_passwd, pwd->pw_uid, pwd->pw_shell, rval, rootlogin);
-#ifndef __minix
 		if (pwd && !rval && rootlogin && !rootterm(tty)) {
 			(void)printf("Login incorrect or refused on this "
 			    "terminal.\n");
@@ -613,9 +617,11 @@ main(int argc, char *argv[])
 		pwd->pw_shell = shell;
 	}
 #endif
-	
-//	(void)setenv("HOME", pwd->pw_dir, 1);
-//	(void)setenv("SHELL", pwd->pw_shell, 1);
+
+#ifndef __minix	
+	(void)setenv("HOME", pwd->pw_dir, 1);
+	(void)setenv("SHELL", pwd->pw_shell, 1);
+#endif
 	if (term[0] == '\0') {
 		char *tt = (char *)stypeof(tty);
 #ifdef LOGIN_CAP
@@ -625,21 +631,23 @@ main(int argc, char *argv[])
 		/* unknown term -> "su" */
 		(void)strlcpy(term, tt != NULL ? tt : "su", sizeof(term));
 	}
-//	(void)setenv("TERM", term, 0);
-//	(void)setenv("LOGNAME", pwd->pw_name, 1);
-//	(void)setenv("USER", pwd->pw_name, 1);
+#ifndef __minix
+	(void)setenv("TERM", term, 0);
+	(void)setenv("LOGNAME", pwd->pw_name, 1);
+	(void)setenv("USER", pwd->pw_name, 1);
 
 #ifdef LOGIN_CAP
 	setusercontext(lc, pwd, pwd->pw_uid, LOGIN_SETPATH);
 #else
-//	(void)setenv("PATH", _PATH_DEFPATH, 0);
+	(void)setenv("PATH", _PATH_DEFPATH, 0);
 #endif
 
 #ifdef KERBEROS5
 	if (krb5tkfile_env)
-//		(void)setenv("KRB5CCNAME", krb5tkfile_env, 1);
+		(void)setenv("KRB5CCNAME", krb5tkfile_env, 1);
 #endif
-	
+#endif /* !__minix */
+
 #ifdef __minix
 	char **env;
 	int ap, envsiz;
@@ -748,11 +756,13 @@ main(int argc, char *argv[])
 			fname = _PATH_MOTDFILE;
 		motd(fname);
 
+#ifndef __minix
 		(void)snprintf(tbuf,
 		    sizeof(tbuf), "%s/%s", _PATH_MAILDIR, pwd->pw_name);
 		if (stat(tbuf, &st) == 0 && st.st_size != 0)
 			(void)printf("You have %smail.\n",
 			    (st.st_mtime > st.st_atime) ? "new " : "");
+#endif
 	}
 
 #ifdef LOGIN_CAP
@@ -764,9 +774,11 @@ main(int argc, char *argv[])
 	(void)signal(SIGINT, SIG_DFL);
 	(void)signal(SIGTSTP, SIG_IGN);
 
+#ifndef __minix
 	tbuf[0] = '-';
 	(void)strlcpy(tbuf + 1, (p = strrchr(pwd->pw_shell, '/')) ?
 	    p + 1 : pwd->pw_shell, sizeof(tbuf) - 1);
+#endif
 
 	/* Wait to change password until we're unprivileged */
 	if (need_chpass) {
