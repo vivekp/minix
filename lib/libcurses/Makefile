@@ -176,7 +176,7 @@ MLINKS+= curses_addch.3 addch.3 curses_addchstr.3 addchnstr.3 \
 	 curses_underscore.3 wunderscore.3 curses_line.3 wvline.3
 
 .if make(install)
-SUBDIR+= PSD.doc
+#SUBDIR+= PSD.doc
 .endif
 
 fileio.h: shlib_version genfileioh.awk
