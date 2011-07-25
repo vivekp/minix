@@ -16,14 +16,14 @@ LIBCOMPAT_DIR?=
 LIBMINLIB_DIR?=
 LIBASYN_DIR?=
 
-SUBDIR= csu ${LIBCOMPAT_DIR} ${LIBC_DIR} libcurses libdriver libnetdriver \
+SUBDIR= csu ${LIBCOMPAT_DIR} ${LIBC_DIR} libdriver libnetdriver \
 	libedit ${LIBM_DIR} libsys libtimers ${LIBUTIL_DIR} libbz2 libl libhgfs  \
 	libz libfetch libarchive libvtreefs libaudiodriver libmthread     \
 	libexec libdevman libusb ${LIBMINLIB_DIR} ${LIBASYN_DIR}          \
 	libddekit
 
 .if defined(NBSD_LIBC) && (${NBSD_LIBC} != "no")
-SUBDIR+= libelf libminc libcrypt
+SUBDIR+= libelf libminc libcrypt libterminfo libcurses
 .endif
 
 .if ${COMPILER_TYPE} == "ack"
@@ -37,10 +37,10 @@ SUBDIR+= libend
 .include <bsd.subdir.mk>
 
 build_ack:
-	sh ack_build.sh obj depend all install
+	sh ack_build.sh obj dependall install
 
 build_elf:
-	sh elf_build.sh obj depend all install
+	sh elf_build.sh obj dependall install
 
 clean_all:
 	sh ack_build.sh clean

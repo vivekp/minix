@@ -4,7 +4,7 @@
 .ifndef HOSTPROG
 
 .include <bsd.init.mk>
-.include <bsd.gcov.mk>
+.include <minix.gcov.mk>
 
 #
 # Definitions and targets shared among all programs built by a single
@@ -360,12 +360,16 @@ LINKSMODE?= ${BINMODE}
 .include <bsd.inc.mk>
 .include <bsd.links.mk>
 .include <bsd.sys.mk>
+.if ${COMPILER_TYPE} == "ack"
+.include <minix.ackdep.mk>
+.elif ${COMPILER_TYPE} == "gnu"
 .include <bsd.dep.mk>
+.endif
 
 .if ${COMPILER_TYPE} == "ack"
-.include <bsd.ack.mk>
+.include <minix.ack.mk>
 .elif ${COMPILER_TYPE} == "gnu"
-.include <bsd.gcc.mk>
+.include <minix.gcc.mk>
 .endif
 
 

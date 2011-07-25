@@ -102,21 +102,7 @@ do
 		SVNREV=-r$OPTARG
 		;;
 	j)
-		FINAL_JAILDIR=$OPTARG
-
-		# Make sure no important directory will be wiped
-		if [ -d "$FINAL_JAILDIR" ]
-		then	echo "$FINAL_JAILDIR exists."
-			exit 1
-		fi
-
-		# Sanity check name
-		if mkdir $FINAL_JAILDIR
-		then	:
-		else	echo "Could not create $FINAL_JAILDIR."
-			exit 1
-		fi
-		rm -rf $FINAL_JAILDIR
+		RELEASEDIR=$OPTARG
 		JAILMODE=1
 		;;
 	u)
@@ -192,8 +178,10 @@ mkdir -p $RELEASEPACKAGE
 echo " * Transfering bootstrap dirs to $RELEASEDIR"
 cp -p /bin/* /usr/bin/* /sbin/* $RELEASEDIR/$XBIN
 cp -rp /usr/lib $RELEASEDIR/usr
-cp -rp /bin/sh /bin/echo /bin/install /bin/rm $RELEASEDIR/bin
-cp -rp /usr/bin/make /usr/bin/yacc /usr/bin/lex /usr/bin/asmconv $RELEASEDIR/usr/bin
+cp -rp /bin/sh /bin/echo /bin/install /bin/rm \
+    /bin/date /bin/ls $RELEASEDIR/bin
+cp -rp /usr/bin/make /usr/bin/yacc /usr/bin/lex /usr/bin/asmconv \
+	/usr/bin/grep /usr/bin/egrep /usr/bin/awk /usr/bin/sed $RELEASEDIR/usr/bin
 
 CONFIGHEADER=$RELEASEDIR/usr/src/common/include/minix/sys_config.h
 
@@ -220,11 +208,12 @@ then
 #ifndef _VCS_REVISION
 #define _VCS_REVISION \"$REVTAG\"
 #endif" >>$CONFIGHEADER
+	DATE=`date +%Y%m%d`
 	# output image name
 	if [ "$USB" -ne 0 ]; then
-		IMG=${IMG_BASE}_${REVTAG}.img
+		IMG=${IMG_BASE}_${DATE}_${REVTAG}.img
 	else
-		IMG=${IMG_BASE}_${REVTAG}.iso
+		IMG=${IMG_BASE}_${DATE}_${REVTAG}.iso
 	fi
 else
 	echo "Copying contents from current src dir."
@@ -299,11 +288,9 @@ fi
 
 # If we are making a jail, all is done!
 if [ $JAILMODE = 1 ]
-then	rm -rf $FINAL_JAILDIR
-	mv $RELEASEDIR $FINAL_JAILDIR
-	echo "Created new minix install in $FINAL_JAILDIR."
+then	echo "Created new minix install in $RELEASEDIR."
 	echo "Enter it by typing: "
-	echo "# chroot $FINAL_JAILDIR /bin/sh"
+	echo "# chroot $RELEASEDIR /bin/sh"
 	exit 0
 fi
 
@@ -387,7 +374,7 @@ else
 	then
 		echo "Appending Minix root and usr filesystem"
 		# Pad ISO out to cylinder boundary
-		isobytes=`stat -size $IMG`
+		isobytes=`stat -f %z $IMG`
 		isosects=`expr $isobytes / 512`
 		isopad=`expr $secs - '(' $isosects % $secs ')'`
 		dd if=/dev/zero count=$isopad >>$IMG

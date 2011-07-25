@@ -18,12 +18,11 @@ STRIPFLAG+= -s
 EXTRA=system.conf passwd rs.single
 
 CPPFLAGS+= -I${MINIXSRCDIR}/servers -I${MINIXSRCDIR}
-MAKEDEV=/usr/bin/MAKEDEV
 CLEANFILES += $(PROGRAMS) $(SCRIPTS) $(EXTRA) bintoc image image.c t proto.gen
 
 install: all
 
-all:	image.c
+realall: image.c
 
 image.c:	bintoc image
 	./bintoc -o $@ image
@@ -147,7 +146,7 @@ passwd: ../../etc/passwd
 rs.single: ../../etc/rs.single
 	install ${STRIPFLAG} ../../etc/$@ $@
 
-proto.gen: $(PROGRAMS) $(SCRIPTS) $(MAKEDEV) proto.sh proto
+proto.gen: $(PROGRAMS) $(SCRIPTS) proto.sh proto
 	sh -e proto.sh >proto.gen
 
 .if ${OBJECT_FMT} == "ELF"
@@ -156,7 +155,7 @@ proto.gen: elfstrip
 .PHONY: elfstrip
 
 elfstrip: $(PROGRAMS)
-	strip $(PROGRAMS)
+	strip -s $(PROGRAMS)
 .endif
 
 .include <minix.service.mk>
