@@ -104,6 +104,7 @@ static int login_krb5_retain_ccache = 0;
 #endif
 
 static void	 checknologin(char *);
+void add2env(char **env, char *entry, int replace);
 #ifdef KERBEROS5
 int	 k5login(struct passwd *, char *, char *, char *);
 void	 k5destroy(void);
@@ -613,8 +614,8 @@ main(int argc, char *argv[])
 	}
 #endif
 	
-	(void)setenv("HOME", pwd->pw_dir, 1);
-	(void)setenv("SHELL", pwd->pw_shell, 1);
+//	(void)setenv("HOME", pwd->pw_dir, 1);
+//	(void)setenv("SHELL", pwd->pw_shell, 1);
 	if (term[0] == '\0') {
 		char *tt = (char *)stypeof(tty);
 #ifdef LOGIN_CAP
@@ -624,19 +625,92 @@ main(int argc, char *argv[])
 		/* unknown term -> "su" */
 		(void)strlcpy(term, tt != NULL ? tt : "su", sizeof(term));
 	}
-	(void)setenv("TERM", term, 0);
-	(void)setenv("LOGNAME", pwd->pw_name, 1);
-	(void)setenv("USER", pwd->pw_name, 1);
+//	(void)setenv("TERM", term, 0);
+//	(void)setenv("LOGNAME", pwd->pw_name, 1);
+//	(void)setenv("USER", pwd->pw_name, 1);
 
 #ifdef LOGIN_CAP
 	setusercontext(lc, pwd, pwd->pw_uid, LOGIN_SETPATH);
 #else
-	(void)setenv("PATH", _PATH_DEFPATH, 0);
+//	(void)setenv("PATH", _PATH_DEFPATH, 0);
 #endif
 
 #ifdef KERBEROS5
 	if (krb5tkfile_env)
-		(void)setenv("KRB5CCNAME", krb5tkfile_env, 1);
+//		(void)setenv("KRB5CCNAME", krb5tkfile_env, 1);
+#endif
+	
+#ifdef __minix
+	char **env;
+	int ap, envsiz;
+
+#define EXTRA_ENV	6
+
+	char user[32];
+	char logname[35];
+	char home[128];
+	char shell[128];
+	char terminal[128];
+
+	char *bp, *sh, *argx[8], **ep;
+	char argx0[64];
+
+	sh = pwd->pw_shell;
+	/* Create the argv[] array from the pw_shell field. */
+	ap = 0;
+	argx[ap++] = argx0;
+	if (pwd->pw_shell[0]) {
+		sh = pwd->pw_shell;
+		bp = sh;
+		while (*bp) {
+			while (*bp && *bp != ' ' && *bp != '\t') bp++;
+			if (*bp == ' ' || *bp == '\t') {
+				*bp++ = '\0';	/* mark end of string */
+				argx[ap++] = bp;
+			}
+		}
+	} else
+	argx[ap] = NULL;
+	strcpy(argx0, "-");	/* most shells need it for their .profile */
+	if ((bp= strrchr(sh, '/')) == NULL) bp = sh; else bp++;
+	strncat(argx0, bp, sizeof(argx0) - 2);
+	
+	/* Set the environment */
+	if (pflag)
+	{
+		for (ep= environ; *ep; ep++)
+			;
+	}
+	else
+		ep= environ;
+
+	envsiz= ep-environ;
+	env= calloc(envsiz + EXTRA_ENV, sizeof(*env));
+	if (env == NULL)
+	{
+		fprintf(stderr, "login: out of memory\n");
+		exit(1);
+	}
+	int i;
+	for (i= 0; i<envsiz; i++)
+		env[i]= environ[i];
+
+	
+	strcpy(user, "USER=");
+	strcat(user, pwd->pw_name);
+	add2env(env, user, 1);
+	strcpy(logname, "LOGNAME=");
+	strcat(logname, pwd->pw_name);
+	add2env(env, logname, 1);
+	strcpy(home, "HOME=");
+	strcat(home, pwd->pw_dir);
+	add2env(env, home, 1);
+	strcpy(shell, "SHELL=");
+	strcat(shell, pwd->pw_shell);
+	add2env(env, shell, 1);
+	strcpy(terminal, "TERM=");
+	strcat(terminal, term);
+	add2env(env, terminal, 0);
 #endif
 
 	if (tty[sizeof("tty")-1] == 'd')
@@ -723,7 +797,12 @@ main(int argc, char *argv[])
 	if (login_krb5_get_tickets)
 		k5_write_creds();
 #endif
+
+#ifdef __minix
+	execve(sh, argx, env);
+#else
 	execlp(pwd->pw_shell, tbuf, NULL);
+#endif
 	err(EXIT_FAILURE, "%s", pwd->pw_shell);
 }
 
@@ -790,3 +869,26 @@ usage(void)
 	    getprogname());
 	exit(EXIT_FAILURE);
 }
+
+#ifdef __minix
+void add2env(char **env, char *entry, int replace)
+{
+/* Replace an environment variable with entry or add entry if the environment
+ * variable doesn't exit yet. 
+ */
+	char *cp;
+	int keylen;
+
+	cp= strchr(entry, '=');
+	keylen= cp-entry+1;
+
+	for(; *env; env++)
+	{
+		if (strncmp(*env, entry, keylen) == 0) {
+			if (!replace) return;		/* Don't replace */
+			break;
+		}
+	}
+	*env= entry;
+}
+#endif
