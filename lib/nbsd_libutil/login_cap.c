@@ -417,12 +417,16 @@ static struct {
 	{ RLIMIT_FSIZE,		R_CSIZE, "filesize", },
 	{ RLIMIT_DATA,		R_CSIZE, "datasize", },
 	{ RLIMIT_STACK,		R_CSIZE, "stacksize", },
+#ifndef __minix
 	{ RLIMIT_RSS,		R_CSIZE, "memoryuse", },
 	{ RLIMIT_MEMLOCK,	R_CSIZE, "memorylocked", },
 	{ RLIMIT_NPROC,		R_CNUMB, "maxproc", },
+#endif
 	{ RLIMIT_NOFILE,	R_CNUMB, "openfiles", },
 	{ RLIMIT_CORE,		R_CSIZE, "coredumpsize", },
+#ifndef __minix
 	{ RLIMIT_SBSIZE,	R_CSIZE, "sbsize", },
+#endif
 	{ -1, 0, 0 }
 };
 
@@ -472,11 +476,14 @@ gsetrl(login_cap_t *lc, int what, const char *name, int type)
 		return (-1);
 	}
 
+#ifndef __minix
 	if (setrlimit(what, &rl)) {
 		syslog(LOG_ERR, "%s: setting resource limit %s: %m",
 		    lc->lc_class, name);
 		return (-1);
 	}
+#endif
+
 #undef	RCUR
 #undef	RMAX
 	return (0);
