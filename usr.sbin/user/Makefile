@@ -5,11 +5,7 @@ WARNS?=	1	# XXX: -Wsign-compare -Wcast-qual
 
 .include <bsd.own.mk>
 
-.if defined(__MINIX)
-CPPFLAGS+= -DPW_MKDB_ARGC=2
-.else
 CPPFLAGS+= -DEXTENSIONS -DPW_MKDB_ARGC=2
-.endif
 
 PROG= user
 SRCS+= user.c main.c
@@ -66,7 +62,7 @@ test: ${PROG}
 	@echo "1. Adding new user"
 	@rm -f useradd
 	@ln -s user useradd
-	-./useradd -m -g=uid test1.1
+	-./useradd -m test1.1
 	@echo "2. Modifying new user"
 	-./${PROG} mod -l test1.2 test1.1
 	@echo "3. Deleting new user"
