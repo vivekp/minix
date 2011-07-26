@@ -2,9 +2,9 @@
 
 .include <bsd.own.mk>
 
-SUBDIR=	aal add_route adduser advent arp ash at autil awk \
-	backup badblocks banner basename bigmake binpackage \
-	binpackages binsizes bzip2 bzip2recover cal calendar \
+SUBDIR=	aal add_route adduser arp ash at autil awk \
+	backup badblocks banner basename binpackage \
+	binpackages bzip2 bzip2recover cal calendar \
 	cat cawf cd  cdprobe checkhier chmem \
 	chroot ci cksum cleantmp clear cmp co \
 	comm compress cp crc cron crontab cut date \
@@ -19,7 +19,7 @@ SUBDIR=	aal add_route adduser advent arp ash at autil awk \
 	lpd ls lspci M mail make  MAKEDEV man \
 	mdb mdocml mesg mined ackmkdep mkdir mkfifo mkfs.mfs mknod \
 	mkproto modem mount mt netconf newroot nice acknm nohup \
-	nonamed od packman passwd paste patch pax \
+	nonamed od passwd paste patch pax \
 	ping postinstall poweroff pr prep printf printroot \
 	profile progressbar proto pr_routes ps pwd pwdauth \
 	ramdisk rarpd rawspeed rcp rdate readall readclock \
@@ -29,7 +29,7 @@ SUBDIR=	aal add_route adduser advent arp ash at autil awk \
 	stty su sum svclog swapfs swifi sync synctree sysenv \
 	syslogd tail tar tcpd tcpdp tcpstat tee telnet \
 	telnetd term termcap tget time tinyhalt touch tr \
-	truncate tsort ttt tty udpstat umount uname unexpand \
+	truncate tsort tty udpstat umount uname unexpand \
 	unstack update uud uue version vol wc \
 	whereis which who write writeisofs fetch \
 	xargs yacc yes zdump zic zmodem pkgin_cd \
