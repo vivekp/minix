@@ -441,7 +441,7 @@ diff -ru nbsdsrc/src/include/unistd.h nbsd_include/unistd.h
  int	 fchown(int, uid_t, gid_t) __RENAME(__posix_fchown);
  #else
  int	 fchown(int, uid_t, gid_t);
-@@ -253,29 +259,37 @@
+@@ -253,29 +259,39 @@
  int	 gethostname(char *, size_t);
  __pure int
  	 getpagesize(void);		/* legacy */
@@ -475,11 +475,13 @@ diff -ru nbsdsrc/src/include/unistd.h nbsd_include/unistd.h
  #ifndef __LIBC12_SOURCE__
  pid_t	 vfork(void) __RENAME(__vfork14);
  #endif
++#else
++pid_t	 vfork(void);
 +#endif /* !__minix */
  
  #ifndef __AUDIT__
  char	*getwd(char *);				/* obsoleted by getcwd() */
-@@ -295,9 +309,15 @@
+@@ -295,9 +311,15 @@
  /*
   * Implementation-defined extensions
   */
@@ -495,7 +497,7 @@ diff -ru nbsdsrc/src/include/unistd.h nbsd_include/unistd.h
  int	 des_cipher(const char *, char *, long, int);
  int	 des_setkey(const char *);
  void	 endusershell(void);
-@@ -315,15 +335,23 @@
+@@ -315,15 +337,23 @@
  int	 iruserok(uint32_t, int, const char *, const char *);
  int      issetugid(void);
  int	 nfssvc(int, void *);
@@ -519,7 +521,7 @@ diff -ru nbsdsrc/src/include/unistd.h nbsd_include/unistd.h
  int	 rresvport(int *);
  int	 ruserok(const char *, int, const char *, const char *);
  int	 setdomainname(const char *, size_t);
-@@ -341,8 +369,10 @@
+@@ -341,8 +371,10 @@
  /* backwards-compatibility; also in string.h */
  __aconst char *strsignal(int);
  #endif /* __STRSIGNAL_DECLARED */
@@ -530,7 +532,7 @@ diff -ru nbsdsrc/src/include/unistd.h nbsd_include/unistd.h
  int	 syscall(int, ...);
  quad_t	 __syscall(quad_t, ...);
  int	 undelete(const char *);
-@@ -364,4 +394,10 @@
+@@ -364,4 +396,10 @@
  #endif
  
  __END_DECLS

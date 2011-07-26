@@ -1,14 +1,18 @@
 ETC=/etc/
 USR=/usr/
 USRETC=/usr/etc/
-FILES1=fstab group hostname.file inet.conf motd.install mtab passwd profile \
+FILES1=fstab hostname.file inet.conf motd.install mtab profile \
 	protocols rc services termcap ttytab utmp rc.cd binary_sizes \
 	binary_sizes.big binary_sizes.xxl syslog.conf rc.daemons.dist \
 	rs.inet rs.single make.conf system.conf ttys resolv.conf
 
 FILES2=shadow
 FILES3=daily dhcptags.conf rc 
+FILES4=group master.passwd 
+
 USRFILES=Makefile
+
+TOOL_PWD_MKDB=pwd_mkdb
 
 clean::
 
@@ -33,6 +37,11 @@ install::
 	install -m 644 -o root -g operator descr /usr/lib/
 
 installforce:: $(ETC)/rc $(ETC)/rs.inet $(ETC)/rs.single $(ETC)/system.conf $(USRETC)/rc $(USR)/Makefile
+
+installpasswd::
+	@echo "Making password databases.."
+	@for f in $(FILES4); do if [ -f $(ETC)/$$f ]; then :; else cp $$f $(ETC)/$$f; chmod 600 $(ETC)/$$f; fi; done
+	touch /etc/pwd.db; touch /etc/spwd.db; ${TOOL_PWD_MKDB} -p /etc/master.passwd
 
 $(ETC)/rc: rc
 	install -m 755 -o root -g operator $> $@

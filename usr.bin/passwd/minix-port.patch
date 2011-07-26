@@ -1,0 +1,26 @@
+diff -ru nbsdsrc/src/usr.bin/passwd/Makefile usr.bin/passwd/Makefile
+--- nbsdsrc/src/usr.bin/passwd/Makefile
++++ usr.bin/passwd/Makefile
+@@ -3,12 +3,22 @@
+ 
+ .include <bsd.own.mk>
+ 
++.if defined(__MINIX)
++USE_YP= no
++USE_KERBEROS= no
++USE_PAM= no
++.endif
++
+ USE_FORT?= yes	# setuid
+ PROG=	passwd
+ SRCS=	local_passwd.c passwd.c
+ MAN=	passwd.1
+ 
++.if defined(__MINIX)
++CPPFLAGS+=-I${.CURDIR}
++.else 
+ CPPFLAGS+=-I${.CURDIR} -DLOGIN_CAP
++.endif
+ 
+ .if (${USE_YP} != "no")
+ SRCS+=	yp_passwd.c

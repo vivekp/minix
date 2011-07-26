@@ -188,20 +188,19 @@ diff -ru nbsdsrc/src/lib/libc/arch/i386/gen/sigsetjmp.S lib/nbsd_libc/arch/i386/
 diff -ru nbsdsrc/src/lib/libc/cdb/cdbr.c lib/nbsd_libc/cdb/cdbr.c
 --- nbsdsrc/src/lib/libc/cdb/cdbr.c
 +++ lib/nbsd_libc/cdb/cdbr.c
-@@ -122,7 +122,22 @@
+@@ -122,7 +122,21 @@
  		cdbr->index_size = 4;
  
  	cdbr->mmap_size = (size_t)sb.st_size;
 +#ifdef __minix
-+	cdbr->mmap_base = mmap(NULL, cdbr->mmap_size, PROT_READ, MAP_ANON, -1, (off_t)0);
-+	if (cdbr->mmap_base == MAP_FAILED) {
++	if(!(cdbr->mmap_base = malloc(cdbr->mmap_size))) {
 +		free(cdbr);
 +		return NULL;
 +	}
 +
 +	if (read(fd, cdbr->mmap_base, cdbr->mmap_size) != cdbr->mmap_size)
 +	{
-+		munmap(cdbr->mmap_base, cdbr->mmap_size);
++		free(cdbr->mmap_base);
 +		free(cdbr);
 +		return NULL;
 +	}
@@ -211,6 +210,17 @@ diff -ru nbsdsrc/src/lib/libc/cdb/cdbr.c lib/nbsd_libc/cdb/cdbr.c
  	close(fd);
  
  	if (cdbr->mmap_base == MAP_FAILED) {
+@@ -241,6 +255,10 @@
+ void
+ cdbr_close(struct cdbr *cdbr)
+ {
++#ifdef __minix
++	free(cdbr->mmap_base);
++#else
+ 	munmap(cdbr->mmap_base, cdbr->mmap_size);
++#endif
+ 	free(cdbr);
+ }
 diff -ru nbsdsrc/src/lib/libc/citrus/Makefile.inc lib/nbsd_libc/citrus/Makefile.inc
 --- nbsdsrc/src/lib/libc/citrus/Makefile.inc
 +++ lib/nbsd_libc/citrus/Makefile.inc
@@ -228,13 +238,12 @@ diff -ru nbsdsrc/src/lib/libc/citrus/Makefile.inc lib/nbsd_libc/citrus/Makefile.
 diff -ru nbsdsrc/src/lib/libc/citrus/citrus_mmap.c lib/nbsd_libc/citrus/citrus_mmap.c
 --- nbsdsrc/src/lib/libc/citrus/citrus_mmap.c
 +++ lib/nbsd_libc/citrus/citrus_mmap.c
-@@ -74,12 +74,25 @@
+@@ -74,12 +74,24 @@
  		goto error;
  	}
  
 +#ifdef __minix
-+	head = mmap(NULL, (size_t)st.st_size, PROT_READ, MAP_ANON, -1, (off_t)0);
-+	if (head == MAP_FAILED) {
++	if(!(head = malloc(st.st_size))) {
 +		ret = errno;
 +		goto error;
 +	}
@@ -254,6 +263,18 @@ diff -ru nbsdsrc/src/lib/libc/citrus/citrus_mmap.c lib/nbsd_libc/citrus/citrus_m
  	_region_init(r, head, (size_t)st.st_size);
  
  error:
+@@ -94,7 +106,11 @@
+ 	_DIAGASSERT(r != NULL);
+ 
+ 	if (_region_head(r) != NULL) {
++#ifdef __minix
++		free(_region_head(r));
++#else
+ 		(void)munmap(_region_head(r), _region_size(r));
++#endif
+ 		_region_init(r, NULL, 0);
+ 	}
+ }
 diff -ru nbsdsrc/src/lib/libc/compat-43/Makefile.inc lib/nbsd_libc/compat-43/Makefile.inc
 --- nbsdsrc/src/lib/libc/compat-43/Makefile.inc
 +++ lib/nbsd_libc/compat-43/Makefile.inc
@@ -338,6 +359,22 @@ diff -ru nbsdsrc/src/lib/libc/db/hash/hash.c lib/nbsd_libc/db/hash/hash.c
  		hashp->BSHIFT = __log2((uint32_t)hashp->BSIZE);
  	}
  
+diff -ru nbsdsrc/src/lib/libc/db/recno/rec_close.c lib/nbsd_libc/db/recno/rec_close.c
+--- nbsdsrc/src/lib/libc/db/recno/rec_close.c
++++ lib/nbsd_libc/db/recno/rec_close.c
+@@ -78,8 +78,12 @@
+ 
+ 	/* Committed to closing. */
+ 	status = RET_SUCCESS;
++#ifndef __minix
+ 	if (F_ISSET(t, R_MEMMAPPED) && munmap(t->bt_smap, t->bt_msize))
+ 		status = RET_ERROR;
++#else
++	assert(!F_ISSET(t, R_MEMMAPPED));
++#endif
+ 
+ 	if (!F_ISSET(t, R_INMEM)) {
+ 		if (F_ISSET(t, R_CLOSEFP)) {
 diff -ru nbsdsrc/src/lib/libc/dlfcn/dlfcn_elf.c lib/nbsd_libc/dlfcn/dlfcn_elf.c
 --- nbsdsrc/src/lib/libc/dlfcn/dlfcn_elf.c
 +++ lib/nbsd_libc/dlfcn/dlfcn_elf.c
@@ -1355,6 +1392,35 @@ diff -ru nbsdsrc/src/lib/libc/gen/opendir.c lib/nbsd_libc/gen/opendir.c
  
  	dirp->dd_flags = flags;
  	error = _initdir(dirp, fd, name);
+diff -ru nbsdsrc/src/lib/libc/gen/pwcache.c lib/nbsd_libc/gen/pwcache.c
+--- nbsdsrc/src/lib/libc/gen/pwcache.c
++++ lib/nbsd_libc/gen/pwcache.c
+@@ -578,6 +578,7 @@
+ 	return (0);
+ }
+ 
++//#define TEST_PWCACHE
+ 
+ #ifdef TEST_PWCACHE
+ 
+@@ -616,7 +617,7 @@
+ 	puts("");
+ 	printf("pass 2 (replacement userdb)\n");
+ 	printf("pwcache_userdb returned %d\n",
+-	    pwcache_userdb(setpassent, test_getpwnam, getpwuid));
++	    pwcache_userdb(setpassent, endpwent, test_getpwnam, getpwuid));
+ 	printf("pwopn %d usrtb_fail %d usrtb %p\n", pwopn, usrtb_fail, usrtb);
+ 
+ 	for (i = 1; i < argc; i++) {
+@@ -635,7 +636,7 @@
+ 	puts("");
+ 	printf("pass 3 (null pointers)\n");
+ 	printf("pwcache_userdb returned %d\n",
+-	    pwcache_userdb(NULL, NULL, NULL));
++	    pwcache_userdb(NULL, NULL, NULL, NULL));
+ 
+ 	return (0);
+ }
 diff -ru nbsdsrc/src/lib/libc/gen/readdir.c lib/nbsd_libc/gen/readdir.c
 --- nbsdsrc/src/lib/libc/gen/readdir.c
 +++ lib/nbsd_libc/gen/readdir.c
@@ -1686,7 +1752,15 @@ diff -ru nbsdsrc/src/lib/libc/include/namespace.h lib/nbsd_libc/include/namespac
  #define getenv_r	_getenv_r
  #define imaxabs		_imaxabs
  #define imaxdiv		_imaxdiv
-@@ -530,7 +532,13 @@
+@@ -441,7 +443,6 @@
+ #define mi_vector_hash		_mi_vector_hash
+ #define mkstemp			_mkstemp
+ #define mktime_z		_mktime_z
+-#define mmap			_mmap
+ #define mpool_close		_mpool_close
+ #define mpool_filter		_mpool_filter
+ #define mpool_get		_mpool_get
+@@ -530,7 +531,13 @@
  #define seed48			_seed48
  #define seekdir			_seekdir
  #define select			_select
@@ -1700,7 +1774,7 @@ diff -ru nbsdsrc/src/lib/libc/include/namespace.h lib/nbsd_libc/include/namespac
  #define setdomainname		_setdomainname
  #define setenv			_setenv
  #define setfsent		_setfsent
-@@ -845,6 +853,79 @@
+@@ -845,6 +852,81 @@
  #define xprtlist_lock		__rpc_xprtlist_lock
  
  #define __learn_tree		___learn_tree
@@ -1740,8 +1814,6 @@ diff -ru nbsdsrc/src/lib/libc/include/namespace.h lib/nbsd_libc/include/namespac
 +#define mkdir _mkdir
 +#define mkfifo _mkfifo
 +#define mknod _mknod
-+#define munmap _munmap
-+#define munmap_text _munmap_text
 +#define open _open
 +#define pathconf _pathconf
 +#define ptrace _ptrace
@@ -1775,6 +1847,10 @@ diff -ru nbsdsrc/src/lib/libc/include/namespace.h lib/nbsd_libc/include/namespac
 +#define truncate _truncate
 +#define write _write
 +#define writev _writev
++#define minix_mmap _minix_mmap
++#define minix_munmap _minix_munmap
++#define minix_munmap_text _minix_munmap_text
++#define vfork _vfork
 +#endif /* __minix */
 +
  #endif /* __weak_alias */
@@ -2154,22 +2230,36 @@ diff -ru nbsdsrc/src/lib/libc/net/send.c lib/nbsd_libc/net/send.c
  
  ssize_t
  send(s, msg, len, flags)
+diff -ru nbsdsrc/src/lib/libc/nls/catclose.c lib/nbsd_libc/nls/catclose.c
+--- nbsdsrc/src/lib/libc/nls/catclose.c
++++ lib/nbsd_libc/nls/catclose.c
+@@ -57,7 +57,11 @@
+ 	}
+ 	
+ 	if (catd) {
++#ifdef __minix
++		free(catd->__data);
++#else
+ 		munmap(catd->__data, (size_t)catd->__size);
++#endif
+ 		free (catd);
+ 	}
+ 
 diff -ru nbsdsrc/src/lib/libc/nls/catopen.c lib/nbsd_libc/nls/catopen.c
 --- nbsdsrc/src/lib/libc/nls/catopen.c
 +++ lib/nbsd_libc/nls/catopen.c
-@@ -169,6 +169,19 @@
+@@ -169,6 +169,18 @@
  		return (nl_catd)-1;
  	}
  
 +#ifdef __minix
-+	data = mmap(0, (size_t)st.st_size, PROT_READ, MAP_ANON, -1, (off_t)0);
-+	if (data == MAP_FAILED) {
++	if(!(data = malloc((size_t)st.st_size))) {
 +		return (nl_catd)-1;
 +	}
 +
 +	if (read(fd, data, st.st_size) != st.st_size)
 +	{
-+		munmap(data, (size_t)st.st_size);
++		free(data);
 +		return (nl_catd)-1;
 +	}
 +	close (fd);
@@ -2177,7 +2267,7 @@ diff -ru nbsdsrc/src/lib/libc/nls/catopen.c lib/nbsd_libc/nls/catopen.c
  	data = mmap(0, (size_t)st.st_size, PROT_READ, MAP_FILE|MAP_SHARED, fd,
  	    (off_t)0);
  	close (fd);
-@@ -176,6 +189,7 @@
+@@ -176,15 +188,24 @@
  	if (data == MAP_FAILED) {
  		return (nl_catd)-1;
  	}
@@ -2185,6 +2275,23 @@ diff -ru nbsdsrc/src/lib/libc/nls/catopen.c lib/nbsd_libc/nls/catopen.c
  
  	if (ntohl((u_int32_t)((struct _nls_cat_hdr *)data)->__magic) !=
  	    _NLS_MAGIC) {
++#ifdef __minix
++		free(data);
++#else
+ 		munmap(data, (size_t)st.st_size);
++#endif
+ 		return (nl_catd)-1;
+ 	}
+ 
+ 	if ((catd = malloc(sizeof (*catd))) == NULL) {
++#ifdef __minix
++		free(data);
++#else
+ 		munmap(data, (size_t)st.st_size);
++#endif
+ 		return (nl_catd)-1;
+ 	}
+ 
 diff -ru nbsdsrc/src/lib/libc/resolv/Makefile.inc lib/nbsd_libc/resolv/Makefile.inc
 --- nbsdsrc/src/lib/libc/resolv/Makefile.inc
 +++ lib/nbsd_libc/resolv/Makefile.inc
@@ -2438,7 +2545,19 @@ diff -ru nbsdsrc/src/lib/libc/stdlib/atexit.c lib/nbsd_libc/stdlib/atexit.c
 diff -ru nbsdsrc/src/lib/libc/stdlib/malloc.c lib/nbsd_libc/stdlib/malloc.c
 --- nbsdsrc/src/lib/libc/stdlib/malloc.c
 +++ lib/nbsd_libc/stdlib/malloc.c
-@@ -65,8 +65,10 @@
+@@ -12,6 +12,11 @@
+  *
+  */
+ 
++#ifdef __minix
++#define mmap minix_mmap
++#define munmap minix_munmap
++#endif
++
+ /*
+  * Defining MALLOC_EXTRA_SANITY will enable extra checks which are related
+  * to internal conditions and consistency in malloc.c. This has a
+@@ -65,8 +70,10 @@
  #       define malloc_pageshift         12U
  #       define malloc_minsize           16U
  #   endif
@@ -2449,7 +2568,7 @@ diff -ru nbsdsrc/src/lib/libc/stdlib/malloc.c lib/nbsd_libc/stdlib/malloc.c
  
  #include <sys/cdefs.h>
  void utrace(struct ut *, int);
-@@ -210,9 +212,11 @@
+@@ -210,9 +217,11 @@
  #define INIT_MMAP()
  #endif
  
@@ -2461,7 +2580,7 @@ diff -ru nbsdsrc/src/lib/libc/stdlib/malloc.c lib/nbsd_libc/stdlib/malloc.c
  
  /* Number of free pages we cache */
  static size_t malloc_cache = 16;
-@@ -485,8 +489,10 @@
+@@ -485,8 +494,10 @@
  		case '<': malloc_cache   >>= 1; break;
  		case 'a': malloc_abort   = 0; break;
  		case 'A': malloc_abort   = 1; break;
@@ -2472,7 +2591,7 @@ diff -ru nbsdsrc/src/lib/libc/stdlib/malloc.c lib/nbsd_libc/stdlib/malloc.c
  		case 'r': malloc_realloc = 0; break;
  		case 'R': malloc_realloc = 1; break;
  		case 'j': malloc_junk    = 0; break;
-@@ -932,8 +938,10 @@
+@@ -932,8 +943,10 @@
      if (malloc_junk)
  	memset(ptr, SOME_JUNK, l);
  
@@ -2483,21 +2602,6 @@ diff -ru nbsdsrc/src/lib/libc/stdlib/malloc.c lib/nbsd_libc/stdlib/malloc.c
  
      tail = (char *)ptr+l;
  
-diff -ru nbsdsrc/src/lib/libc/stdlib/system.c lib/nbsd_libc/stdlib/system.c
---- nbsdsrc/src/lib/libc/stdlib/system.c
-+++ lib/nbsd_libc/stdlib/system.c
-@@ -91,7 +91,11 @@
- 	}
- 
- 	(void)__readlockenv();
-+#ifdef __minix
-+	switch(pid = fork() ) {
-+#else /* !__minix */
- 	switch(pid = vfork()) {
-+#endif /* !__minix */
- 	case -1:			/* error */
- 		(void)__unlockenv();
- 		sigaction(SIGINT, &intsa, NULL);
 diff -ru nbsdsrc/src/lib/libc/termios/Makefile.inc lib/nbsd_libc/termios/Makefile.inc
 --- nbsdsrc/src/lib/libc/termios/Makefile.inc
 +++ lib/nbsd_libc/termios/Makefile.inc

@@ -1,0 +1,113 @@
+diff -ru nbsdsrc/src/usr.sbin/user/Makefile usr.sbin/user/Makefile
+--- nbsdsrc/src/usr.sbin/user/Makefile
++++ usr.sbin/user/Makefile
+@@ -62,7 +62,7 @@
+ 	@echo "1. Adding new user"
+ 	@rm -f useradd
+ 	@ln -s user useradd
+-	-./useradd -m -g=uid test1.1
++	-./useradd -m test1.1
+ 	@echo "2. Modifying new user"
+ 	-./${PROG} mod -l test1.2 test1.1
+ 	@echo "3. Deleting new user"
+diff -ru nbsdsrc/src/usr.sbin/user/user.c usr.sbin/user/user.c
+--- nbsdsrc/src/usr.sbin/user/user.c
++++ usr.sbin/user/user.c
+@@ -152,8 +152,12 @@
+ #endif
+ 
+ #ifndef DEF_SKELDIR
++#ifdef __minix
++#define DEF_SKELDIR	"/usr/ast"
++#else
+ #define DEF_SKELDIR	"/etc/skel"
+ #endif
++#endif
+ 
+ #ifndef DEF_SHELL
+ #define DEF_SHELL	_PATH_BSHELL
+@@ -391,11 +395,13 @@
+ 		    _PATH_GROUP);
+ 		return 0;
+ 	}
++#ifndef __minix
+ 	if (flock(fileno(from), LOCK_EX | LOCK_NB) < 0) {
+ 		warn("Can't lock `%s'", _PATH_GROUP);
+ 		(void)fclose(from);
+ 		return 0;
+ 	}
++#endif
+ 	(void)fstat(fileno(from), &st);
+ 	(void)snprintf(f, sizeof(f), "%s.XXXXXX", _PATH_GROUP);
+ 	if ((fd = mkstemp(f)) < 0) {
+@@ -455,12 +461,14 @@
+ 		    group, _PATH_GROUP);
+ 		return 0;
+ 	}
++#ifndef __minix
+ 	if (flock(fileno(from), LOCK_EX | LOCK_NB) < 0) {
+ 		warn("Can't modify group `%s': can't lock `%s'",
+ 		    group, _PATH_GROUP);
+ 		(void)fclose(from);
+ 		return 0;
+ 	}
++#endif
+ 	(void)fstat(fileno(from), &st);
+ 	(void)snprintf(f, sizeof(f), "%s.XXXXXX", _PATH_GROUP);
+ 	if ((fd = mkstemp(f)) < 0) {
+@@ -578,12 +586,14 @@
+ 		    user, _PATH_GROUP);
+ 		return 0;
+ 	}
++#ifndef __minix
+ 	if (flock(fileno(from), LOCK_EX | LOCK_NB) < 0) {
+ 		warn("Can't append group(s) for `%s': can't lock `%s'",
+ 		    user, _PATH_GROUP);
+ 		(void)fclose(from);
+ 		return 0;
+ 	}
++#endif
+ 	(void)fstat(fileno(from), &st);
+ 	(void)snprintf(f, sizeof(f), "%s.XXXXXX", _PATH_GROUP);
+ 	if ((fd = mkstemp(f)) < 0) {
+@@ -1092,10 +1102,12 @@
+ 		err(EXIT_FAILURE, "Can't add user `%s': can't open `%s'",
+ 		    login_name, _PATH_MASTERPASSWD);
+ 	}
++#ifndef __minix
+ 	if (flock(masterfd, LOCK_EX | LOCK_NB) < 0) {
+ 		err(EXIT_FAILURE, "Can't add user `%s': can't lock `%s'",
+ 		    login_name, _PATH_MASTERPASSWD);
+ 	}
++#endif
+ 	pw_init();
+ 	if ((ptmpfd = pw_lock(WAITSECS)) < 0) {
+ 		int serrno = errno;
+@@ -1326,12 +1338,14 @@
+ 		    login_name, _PATH_GROUP, _PATH_GROUP);
+ 		return 0;
+ 	}
++#ifndef __minix
+ 	if (flock(fileno(from), LOCK_EX | LOCK_NB) < 0) {
+ 		warn("Can't remove user `%s' from `%s': can't lock `%s'",
+ 		    login_name, _PATH_GROUP, _PATH_GROUP);
+ 		(void)fclose(from);
+ 		return 0;
+ 	}
++#endif
+ 	(void)fstat(fileno(from), &st);
+ 	(void)snprintf(f, sizeof(f), "%s.XXXXXX", _PATH_GROUP);
+ 	if ((fd = mkstemp(f)) < 0) {
+@@ -1454,10 +1468,12 @@
+ 		err(EXIT_FAILURE, "Can't modify user `%s': can't open `%s'",
+ 		    login_name, _PATH_MASTERPASSWD);
+ 	}
++#ifndef __minix
+ 	if (flock(masterfd, LOCK_EX | LOCK_NB) < 0) {
+ 		err(EXIT_FAILURE, "Can't modify user `%s': can't lock `%s'",
+ 		    login_name, _PATH_MASTERPASSWD);
+ 	}
++#endif
+ 	pw_init();
+ 	if ((ptmpfd = pw_lock(WAITSECS)) < 0) {
+ 		int serrno = errno;
