@@ -142,11 +142,7 @@ pw_mkdb(username, secureonly)
 	int pstat, i;
 	pid_t pid;
 
-#ifdef __minix
-	pid = fork();
-#else
 	pid = vfork();
-#endif
 	if (pid == -1)
 		return -1;
 
