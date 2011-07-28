@@ -23,6 +23,9 @@
 # Already in getprogname
 #	setprogname.c
 
+# To be removed when we completely switch to NetBSD passwd format.
+SRCS+= __minix_getpwent.c
+
 SRCS+= 	_errno.c alarm.c alphasort.c arc4random.c assert.c basename.c clock.c \
 	closedir.c ctermid.c ctype_.c daemon.c \
 	dehumanize_number.c dirname.c err.c errx.c \

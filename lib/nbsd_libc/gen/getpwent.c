@@ -139,6 +139,11 @@ static 	mutex_t			_pwmutex = MUTEX_INITIALIZER;
 
 const char __yp_token[] = "__YP!";	/* Let pwd_mkdb pull this in. */
 
+/* Fallback functions in case we don't have master.passwd file. */
+struct passwd *__minix_getpwent(void);
+struct passwd *__minix_getpwuid(uid_t );
+struct passwd *__minix_getpwnam(const char *);
+
 
 /*
  * The pwd.db lookup techniques and data extraction code here must be kept
@@ -2413,7 +2418,7 @@ getpwent(void)
 	r = nsdispatch(NULL, dtab, NSDB_PASSWD, "getpwent", __nsdefaultcompat,
 	    &retval);
 	mutex_unlock(&_pwmutex);
-	return (r == NS_SUCCESS) ? retval : NULL;
+	return (r == NS_SUCCESS) ? retval : (retval = __minix_getpwent());
 }
 
 int
@@ -2468,7 +2473,7 @@ getpwnam(const char *name)
 	rv = nsdispatch(NULL, dtab, NSDB_PASSWD, "getpwnam", __nsdefaultcompat,
 	    &retval, name);
 	mutex_unlock(&_pwmutex);
-	return (rv == NS_SUCCESS) ? retval : NULL;
+	return (rv == NS_SUCCESS) ? retval : (retval = __minix_getpwnam(name));
 }
 
 int
@@ -2528,7 +2533,7 @@ getpwuid(uid_t uid)
 	    &retval, uid);
 #endif
 	mutex_unlock(&_pwmutex);
-	return (rv == NS_SUCCESS) ? retval : NULL;
+	return (rv == NS_SUCCESS) ? retval : (retval = __minix_getpwuid(uid));
 }
 
 int

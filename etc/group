@@ -15,5 +15,5 @@ sshd:*:22:
 smtpd:*:25:
 guest:*:31:root
 nobody:*:39:
+nogroup:*:98:
 users:*:100:
-nogroup:*:32766:

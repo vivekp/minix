@@ -2,10 +2,13 @@
 	To switch to NetBSD passwd format:
 	# make -C etc installpasswd
 	# make clean world 
+	# rm /usr/bin/chown
+	# rm /usr/bin/chmod
 	# cp /usr/bin/pax /bin/pax
-	
+
 	To test the switch to new passwd format:
 	# make -C usr.sbin/user test 
+
 20110722:
 	To install the new mkdep:
 	# cp /usr/bin/mkdep /usr/bin/ackmkdep

@@ -12,4 +12,4 @@ service:*:12:12::0:0:System Services:/:/bin/sh
 sshd:*:22:22::0:0:sshd:& pseudo-user:/bin/sh
 smtpd:*:25:25::0:0:smtpd:& pseudo-user:/bin/sh
 games:*:9998:13::0:0:& pseudo-user:/:/bin/sh
-nobody:*:32767:39::0:0:Unprivileged user:/tmp:/bin/sh
+nobody:*:9999:39::0:0:Unprivileged user:/tmp:/bin/sh
