@@ -215,6 +215,8 @@ pw_scan( char *bp, struct passwd *pw, int *flags)
 	if (!(pw->pw_shell = strsep(&bp, ":")))		/* shell */
 		goto fmt;
 
+#undef HAVE_NBTOOL_CONFIG_H
+#define HAVE_NBTOOL_CONFIG_H 1
 #if ! HAVE_NBTOOL_CONFIG_H
 	p = pw->pw_shell;
 	if (root && *p)					/* empty == /bin/sh */

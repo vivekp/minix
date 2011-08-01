@@ -14,23 +14,18 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
-
-#define arraysize(a)	(sizeof(a) / sizeof((a)[0]))
-#define arraylimit(a)	((a) + arraysize(a))
+#include <err.h>
 
 static char PASSWD[]= "/etc/passwd";	/* The password file. */
 static char SHADOW[]= "/etc/shadow";	/* The shadow file. */
 static const char *pwfile;		/* Current password file. */
 static const char *shfile;		/* Current shadow file. */
-static char buf[1024];			/* Read buffer. */
-static char pwline[256];		/* One line from the password file. */
 static struct passwd entry;		/* Entry to fill and return. */
 static int pwfd= -1;			/* Filedescriptor to the file. */
 static int shfd= -1;
-static char *bufptr;			/* Place in buf. */
-static ssize_t buflen= 0;		/* Remaining characters in buf. */
-static char *lineptr;			/* Place in the line. */
+static char *lineptr = NULL;		/* One line in the passwd file. */
 char password[128];			/* Password in the shadow file. */
+FILE *fpwd = NULL;			/* Stream of passwd file. */
 
 void __minix_endpwent(void);
 int __minix_setpwent(void);
@@ -39,7 +34,6 @@ void __minix_endshent(void);
 int __minix_setshent(void);
 void __minix_setshfile(const char *);
 static int __minix_getline(void);
-static char *scan_colon(void);
 static char *__minix_get_passwd_from_user(char *); 
 struct passwd *__minix_getpwent(void);
 struct passwd *__minix_getpwuid(uid_t);
@@ -52,7 +46,6 @@ void __minix_endpwent(void)
 	if (pwfd >= 0) {
 		(void) close(pwfd);
 		pwfd= -1;
-		buflen= 0;
 	}
 }
 
@@ -64,6 +57,9 @@ int __minix_setpwent(void)
 	if (pwfile == NULL) pwfile= PASSWD;
 
 	if ((pwfd= open(pwfile, O_RDONLY)) < 0) return -1;
+	fpwd = fdopen(pwfd, "r");
+	if(fpwd == NULL)
+		exit(EXIT_FAILURE);
 	(void) fcntl(pwfd, F_SETFD, fcntl(pwfd, F_GETFD) | FD_CLOEXEC);
 	return 0;
 }
@@ -106,57 +102,32 @@ void __minix_setshfile(const char *file)
 static int __minix_getline(void)
 /* Get one line from the password file, return 0 if bad or EOF. */
 {
-	lineptr= pwline;
-
-	do {
-		if (buflen == 0) {
-			if ((buflen= read(pwfd, buf, sizeof(buf))) <= 0)
-				return 0;
-			bufptr= buf;
-		}
-
-		if (lineptr == arraylimit(pwline)) return 0;
-		buflen--;
-	} while ((*lineptr++ = *bufptr++) != '\n');
-
-	lineptr= pwline;
-	return 1;
-}
-
-static char *scan_colon(void)
-/* Scan for a field separator in a line, return the start of the field. */
-{
-	char *field= lineptr;
-	char *last;
-
-	for (;;) {
-		last= lineptr;
-		if (*lineptr == 0) return NULL;
-		if (*lineptr == '\n') break;
-		if (*lineptr++ == ':') break;
+	
+	size_t n = 0;
+	if ((getline(&lineptr, &n, fpwd)) == -1) {
+		return 0;
 	}
-	*last= 0;
-	return field;
+
+	return 1;
 }
 
 static char *__minix_get_passwd_from_user(char *name) 
 /* Scan shadow file for username, return the corresponding passwd entry. */
 {
 	__minix_setshent();
-	
 	if(shfd < 0) return NULL;
 
 	FILE *fp;
-
 	fp = fdopen(shfd, "r"); 
+	if(fp == NULL)
+		exit(EXIT_FAILURE);
 	
 	/* until a good line is read. */
 	for(;;) {
+		bzero(password, 128);
 		char line[1024];		
-
 		if(fgets(line, (int)sizeof(line), fp) == NULL)
 			return NULL;
-		if(line == EOF) break;
 		
 		char username[128];
 		int i, j; 
@@ -179,7 +150,6 @@ static char *__minix_get_passwd_from_user(char *name)
 			return password;
 		}
 	}
-
 fmt:
 	warnx("corrupted shadow file !\n");
 	return NULL;
@@ -188,29 +158,21 @@ fmt:
 struct passwd *__minix_getpwent(void)
 /* Read one entry from the password file. */
 {
-	char *p;
-
 	/* Open the file if not yet open. */
 	if (pwfd < 0 && __minix_setpwent() < 0) return NULL;
 
 	/* Until a good line is read. */
 	for (;;) {
 		if (!__minix_getline()) return NULL;	/* EOF or corrupt. */
-
-		if ((entry.pw_name= scan_colon()) == NULL) continue;
-		if ((entry.pw_passwd= scan_colon()) == NULL) continue;
-		if ((p= scan_colon()) == NULL) continue;
-		entry.pw_uid= strtol(p, NULL, 0);
-		if ((p= scan_colon()) == NULL) continue;
-		entry.pw_gid= strtol(p, NULL, 0);
-		if ((entry.pw_gecos= scan_colon()) == NULL) continue;
-		if ((entry.pw_dir= scan_colon()) == NULL) continue;
-		if ((entry.pw_shell= scan_colon()) == NULL) continue;
-
-		if (*lineptr == 0) {
-			entry.pw_passwd = __minix_get_passwd_from_user(entry.pw_name);
-			return &entry;
+		
+		int flag = 0x10;			/* flag for old passwd entry. */	
+		pw_scan(lineptr, &entry, &flag);	
+		if(entry.pw_name != NULL && 
+		   (__minix_get_passwd_from_user(entry.pw_name)) != NULL) {
+			entry.pw_passwd = strdup(password);
 		}
+		return &entry;
+	
 	}
 }
 

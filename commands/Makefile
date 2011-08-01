@@ -26,7 +26,7 @@ SUBDIR=	aal add_route arp at autil awk \
 	readfs remsync rev rget rmdir \
 	rotate sed setup shar acksize \
 	sleep slip sort spell split srccrc ackstrip \
-	stty sum svclog swapfs swifi sync synctree sysenv \
+	stty sum svclog swifi sync synctree sysenv \
 	syslogd tail tcpd tcpdp tcpstat tee telnet \
 	telnetd term termcap tget time tinyhalt touch tr \
 	truncate tsort tty udpstat umount uname unexpand \
