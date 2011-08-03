@@ -2,6 +2,7 @@
 
 .include <bsd.own.mk>
 
+.if !defined(NEED_NBSDLIBC)
 SUBDIR=	aal add_route arp at autil awk \
 	backup badblocks banner basename binpackage \
 	binpackages bzip2 bzip2recover cal calendar \
@@ -35,22 +36,34 @@ SUBDIR=	aal add_route arp at autil awk \
 	xargs yacc yes zdump zic zmodem pkgin_cd \
 	mktemp
 
+#To be replaced by NetBSD version
+SUBDIR+=install
+
 .if ${COMPILER_TYPE} == "gnu"
-SUBDIR += elf2aout
+SUBDIR+=elf2aout
 .endif
 
 .if ${ARCH} == "i386"
-SUBDIR+=	atnormalize dosread fdisk loadfont \
+SUBDIR+=atnormalize dosread fdisk loadfont \
 	autopart part partition playwave postmort \
 	recwave repartition screendump padtext
-SUBDIR+=	acd asmconv gas2ack
+SUBDIR+=acd asmconv gas2ack
 .endif
+.endif # !NEED_NBSDLIBC
 
-#Port the NetBSD version of these utilities
-#SUBDIR+= ash date find install ls man su write
-#Don't compile them for now
-#SUBDIR+= co ci cron crontab de elle elvis fetch finger ftpd200 \
-	 id ipcs leave logger mail pax pwdauth rcp reboot \
-	 rlogin rlogind rsh rshd service su tar
+.if defined(NEED_NBSDLIBC)
+#Compile them with new libc/clang.
+SUBDIR+=ash date find finger ls man write \
+	cron crontab fetch id ipcs leave logger \ 
+	mail pax reboot service tar
+
+#Ones which depend on old crypt, but we want them.
+#Preferably port the NetBSD version of these.
+#SUBDIR+=su
+.endif # NEED_NBSDLIBC
+
+# utilities we don't want anymore in the base system.
+#SUBDIR+=rlogin rlogind rsh rshd rcpx co ci ftpd200 \
+	pwdauth de elle elvis
 
 .include <bsd.subdir.mk>

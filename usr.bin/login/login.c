@@ -104,7 +104,7 @@ static int login_krb5_retain_ccache = 0;
 #endif
 
 static void	 checknologin(char *);
-void add2env(char **env, char *entry, int replace);
+void add2env(char **, char *, int);
 #ifdef KERBEROS5
 int	 k5login(struct passwd *, char *, char *, char *);
 void	 k5destroy(void);
@@ -606,8 +606,9 @@ main(int argc, char *argv[])
 		(void)setuid(pwd->pw_uid);
 #endif
 
-	if (*pwd->pw_shell == '\0')
+	if (*pwd->pw_shell == '\0' || *pwd->pw_shell == '\n') {
 		pwd->pw_shell = _PATH_BSHELL;
+	}
 #ifdef LOGIN_CAP
 	if ((shell = login_getcapstr(lc, "shell", NULL, NULL)) != NULL) {
 		if ((shell = strdup(shell)) == NULL) {
@@ -657,13 +658,12 @@ main(int argc, char *argv[])
 	char user[32];
 	char logname[35];
 	char home[128];
-	char shell[128];
+	char usershell[128];
 	char terminal[128];
 
 	char *bp, *sh, *argx[8], **ep;
 	char argx0[64];
 
-	sh = pwd->pw_shell;
 	/* Create the argv[] array from the pw_shell field. */
 	ap = 0;
 	argx[ap++] = argx0;
@@ -713,9 +713,9 @@ main(int argc, char *argv[])
 	strcpy(home, "HOME=");
 	strcat(home, pwd->pw_dir);
 	add2env(env, home, 1);
-	strcpy(shell, "SHELL=");
-	strcat(shell, pwd->pw_shell);
-	add2env(env, shell, 1);
+	strcpy(usershell, "SHELL=");
+	strcat(usershell, pwd->pw_shell);
+	add2env(env, usershell, 1);
 	strcpy(terminal, "TERM=");
 	strcat(terminal, term);
 	add2env(env, terminal, 0);
@@ -811,7 +811,7 @@ main(int argc, char *argv[])
 #endif
 
 #ifdef __minix
-	execve(sh, argx, env);
+	execve(pwd->pw_shell, argx, env);
 #else
 	execlp(pwd->pw_shell, tbuf, NULL);
 #endif

@@ -39,6 +39,11 @@ install::
 installforce:: $(ETC)/rc $(ETC)/rs.inet $(ETC)/rs.single $(ETC)/system.conf $(USRETC)/rc $(USR)/Makefile
 
 installpasswd::
+	@echo "Moving old /etc/passwd to /etc/passwd.obsolete"
+	`mv /etc/passwd /etc/passwd.obsolete`
+	@echo "Moving old /etc/group to /etc/group.obsolete"
+	`mv /etc/group /etc/group.obsolete`
+	@echo "Leaving old /etc/shadow file intact for now"
 	@echo "Making password databases.."
 	@for f in $(FILES4); do if [ -f $(ETC)/$$f ]; then :; else cp $$f $(ETC)/$$f; chmod 600 $(ETC)/$$f; fi; done
 	touch /etc/pwd.db; touch /etc/spwd.db; ${TOOL_PWD_MKDB} -p /etc/master.passwd

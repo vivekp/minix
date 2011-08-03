@@ -1,8 +1,9 @@
 20110727:
 	To switch to NetBSD passwd format:
-	# rm /usr/bin/chown /usr/bin/chgrp /usr/bin/chmod
-	# cp /usr/bin/pax /bin/pax
 	# make clean world 
+	# rm /usr/bin/chown /usr/bin/chmod
+	# cp /usr/bin/pax /bin/pax
+	# cp /usr/bin/mkdir /bin/mkdir
 	# make -C etc installpasswd
 
 	To test the switch to new passwd format:

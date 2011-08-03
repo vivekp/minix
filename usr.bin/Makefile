@@ -3,7 +3,7 @@
 .include <bsd.own.mk>
 
 # NetBSD imports
-SUBDIR= chpass indent login m4 stat tic sed mkdep passwd uniq
+SUBDIR= chpass indent login m4 newgrp stat tic sed mkdep passwd su uniq
 
 # Non-NetBSD imports
 SUBDIR+= ministat
