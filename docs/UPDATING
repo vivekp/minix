@@ -4,6 +4,11 @@
 	# rm /usr/bin/chown /usr/bin/chmod
 	# cp /usr/bin/pax /bin/pax
 	# cp /usr/bin/mkdir /bin/mkdir
+
+	To save your existing user accounts while switching:
+	# sh etc/save_user_accounts.sh /etc/passwd
+
+	To create new password databases:
 	# make -C etc installpasswd
 
 	To test the switch to new passwd format:
