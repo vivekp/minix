@@ -1,0 +1,15 @@
+diff -ru nbsdsrc/src/sbin/chown/chown.c sbin/chown/chown.c
+--- nbsdsrc/src/sbin/chown/chown.c
++++ sbin/chown/chown.c
+@@ -192,7 +192,11 @@
+ 			 * use lchown only for FTS_SL and should use chown
+ 			 * for others.
+ 			 */
++#ifdef __minix
++			change_owner = chown;
++#else
+ 			change_owner = lchown;
++#endif
+ 			break;
+ 		case FTS_SLNONE:		/* Ignore. */
+ 			/*

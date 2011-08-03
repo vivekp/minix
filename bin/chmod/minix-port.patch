@@ -1,0 +1,18 @@
+diff -ru nbsdsrc/src/bin/chmod/chmod.c bin/chmod/chmod.c
+--- nbsdsrc/src/bin/chmod/chmod.c
++++ bin/chmod/chmod.c
+@@ -143,10 +143,14 @@
+ 		}
+ 	} else if (!hflag)
+ 		fts_options |= FTS_COMFOLLOW;
++#ifndef __minix
+ 	if (hflag)
+ 		change_mode = lchmod;
+ 	else
+ 		change_mode = chmod;
++#else
++	change_mode = chmod;
++#endif
+ 
+ 	mode = *argv;
+ 	if ((set = setmode(mode)) == NULL) {

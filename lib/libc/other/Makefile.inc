@@ -4,9 +4,6 @@
 CPPFLAGS.fslib.c+=-I${.CURDIR}/../../servers
 CPPFLAGS.fsversion.c+=-I${.CURDIR}/../../servers
 
-#To be removed, and eliminate pwdauth as a consequence.
-#SRCS+= crypt.c
-
 SRCS+=  \
 	__pm_findproc.c \
 	_adddma.c \

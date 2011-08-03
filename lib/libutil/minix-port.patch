@@ -1,0 +1,142 @@
+diff -ru nbsdsrc/src/lib/libutil/Makefile lib/libutil/Makefile
+--- nbsdsrc/src/lib/libutil/Makefile
++++ lib/libutil/Makefile
+@@ -1,7 +1,11 @@
+ #	$NetBSD: Makefile,v 1.63 2010/01/27 19:10:31 drochner Exp $
+ #	@(#)Makefile	8.1 (Berkeley) 6/4/93
+ 
++.if defined(__MINIX)
++USE_SHLIBDIR=	no
++.else
+ USE_SHLIBDIR=	yes
++.endif
+ 
+ .include <bsd.own.mk>
+ 
+@@ -10,6 +14,13 @@
+ WARNS=	4
+ LIB=	util
+ CPPFLAGS+=-DLIBC_SCCS -I${.CURDIR}
++.if defined(__MINIX)
++SRCS=	efun.c getmntopts.c login.c loginx.c login_cap.c logout.c \
++	logoutx.c logwtmp.c logwtmpx.c opendisk.c \
++	passwd.c pidfile.c pidlock.c \
++	secure_path.c snprintb.c stat_flags.c \
++	ttyaction.c ttymsg.c
++.else
+ SRCS=	efun.c getbootfile.c getlabelsector.c getmaxpartitions.c \
+ 	getmntopts.c getrawpartition.c \
+ 	disklabel_dkcksum.c disklabel_scan.c \
+@@ -20,6 +31,7 @@
+ 	raise_default_signal.c \
+ 	secure_path.c snprintb.c sockaddr_snprintf.c stat_flags.c \
+ 	ttyaction.c ttymsg.c
++.endif
+ 
+ MAN=	efun.3 getbootfile.3 getlabelsector.3 getmaxpartitions.3 \
+ 	getmntopts.3 \
+@@ -33,9 +45,16 @@
+ 	ttymsg.3 util.3
+ 
+ YPREFIX=__pd
+-.PATH:	${NETBSDSRCDIR}/lib/libc/gen
+ 
++.PATH:	${NETBSDSRCDIR}/lib/${LIBC_DIR}/gen
++
++.if !defined(__MINIX)
+ .include "compat/Makefile.inc"
++.endif
++
++.if defined(__MINIX)
++.include "${.CURDIR}/sys-minix/Makefile.inc"
++.endif
+ 
+ MLINKS+=getlabelsector.3 getlabeloffset.3
+ MLINKS+=login.3 logout.3
+diff -ru nbsdsrc/src/lib/libutil/login_cap.c lib/libutil/login_cap.c
+--- nbsdsrc/src/lib/libutil/login_cap.c
++++ lib/libutil/login_cap.c
+@@ -417,12 +417,16 @@
+ 	{ RLIMIT_FSIZE,		R_CSIZE, "filesize", },
+ 	{ RLIMIT_DATA,		R_CSIZE, "datasize", },
+ 	{ RLIMIT_STACK,		R_CSIZE, "stacksize", },
++#ifndef __minix
+ 	{ RLIMIT_RSS,		R_CSIZE, "memoryuse", },
+ 	{ RLIMIT_MEMLOCK,	R_CSIZE, "memorylocked", },
+ 	{ RLIMIT_NPROC,		R_CNUMB, "maxproc", },
++#endif
+ 	{ RLIMIT_NOFILE,	R_CNUMB, "openfiles", },
+ 	{ RLIMIT_CORE,		R_CSIZE, "coredumpsize", },
++#ifndef __minix
+ 	{ RLIMIT_SBSIZE,	R_CSIZE, "sbsize", },
++#endif
+ 	{ -1, 0, 0 }
+ };
+ 
+@@ -472,11 +476,14 @@
+ 		return (-1);
+ 	}
+ 
++#ifndef __minix
+ 	if (setrlimit(what, &rl)) {
+ 		syslog(LOG_ERR, "%s: setting resource limit %s: %m",
+ 		    lc->lc_class, name);
+ 		return (-1);
+ 	}
++#endif
++
+ #undef	RCUR
+ #undef	RMAX
+ 	return (0);
+@@ -691,6 +698,7 @@
+ 	}
+ 	errno = 0;
+ 
++#ifndef __minix
+ 	if (flags & LOGIN_SETLOGIN)
+ 		if (setlogin(pwd->pw_name) == -1) {
+ 			syslog(LOG_ERR, "setlogin(%s) failure: %m",
+@@ -698,6 +706,7 @@
+ 			login_close(flc);
+ 			return (-1);
+ 		}
++#endif
+ 
+ 	if (flags & LOGIN_SETUSER)
+ 		if (setuid(uid) == -1) {
+diff -ru nbsdsrc/src/lib/libutil/passwd.c lib/libutil/passwd.c
+--- nbsdsrc/src/lib/libutil/passwd.c
++++ lib/libutil/passwd.c
+@@ -213,16 +213,19 @@
+ 
+ 	/* Unlimited resource limits. */
+ 	rlim.rlim_cur = rlim.rlim_max = RLIM_INFINITY;
++#ifndef __minix
+ 	(void)setrlimit(RLIMIT_CPU, &rlim);
+ 	(void)setrlimit(RLIMIT_FSIZE, &rlim);
+ 	(void)setrlimit(RLIMIT_STACK, &rlim);
+ 	(void)setrlimit(RLIMIT_DATA, &rlim);
+ 	(void)setrlimit(RLIMIT_RSS, &rlim);
++#endif
+ 
+ 	/* Don't drop core (not really necessary, but GP's). */
+ 	rlim.rlim_cur = rlim.rlim_max = 0;
++#ifndef __minix
+ 	(void)setrlimit(RLIMIT_CORE, &rlim);
+-
++#endif
+ 	/* Turn off signals. */
+ 	(void)signal(SIGALRM, SIG_IGN);
+ 	(void)signal(SIGHUP, SIG_IGN);
+@@ -258,7 +261,11 @@
+ 	sprintf(p, "%s %s", editor, filename);
+ 	argp[2] = p;
+ 
++#ifdef __minix
++	switch(editpid = fork()) {
++#else
+ 	switch(editpid = vfork()) {
++#endif
+ 	case -1:
+ 		free(p);
+ 		return;

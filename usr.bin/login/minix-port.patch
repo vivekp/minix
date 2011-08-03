@@ -1,0 +1,320 @@
+diff -ru nbsdsrc/src/usr.bin/login/Makefile usr.bin/login/Makefile
+--- nbsdsrc/src/usr.bin/login/Makefile
++++ usr.bin/login/Makefile
+@@ -1,6 +1,12 @@
+ #	$NetBSD: Makefile,v 1.51 2009/12/29 19:26:13 christos Exp $
+ #	@(#)Makefile	8.1 (Berkeley) 7/19/93
+ 
++.if defined(__MINIX)
++USE_PAM= no
++USE_KERBEROS=  no
++USE_SKEY= no
++.endif
++
+ WARNS?=	2	# XXX -Wcast-qual issues
+ 
+ .include <bsd.own.mk>
+@@ -20,7 +26,9 @@
+ DPADD+= ${LIBPAM} ${PAM_STATIC_DPADD}
+ .else	# USE_PAM == no
+ SRCS+=	login.c
++.if !defined(__MINIX)
+ CPPFLAGS+=-DLOGIN_CAP -DSUPPORT_UTMP -DSUPPORT_UTMPX
++.endif
+ 
+ .if (${USE_KERBEROS} != "no")
+ SRCS+= k5login.c
+@@ -41,7 +49,7 @@
+ 
+ CLEANFILES+=	copyrightstr.c
+ 
+-copyrightstr.c: ${NETBSDSRCDIR}/sys/conf/copyright
++copyrightstr.c: ${.CURDIR}/copyright
+ 	${_MKTARGET_CREATE}
+ 	rm -f ${.TARGET}
+ 	${TOOL_AWK} '\
+diff -ru nbsdsrc/src/usr.bin/login/common.c usr.bin/login/common.c
+--- nbsdsrc/src/usr.bin/login/common.c
++++ usr.bin/login/common.c
+@@ -155,6 +155,7 @@
+ 	exit(EXIT_FAILURE);
+ }
+ 
++#ifndef __minix
+ void
+ update_db(int quietlog, int rootlogin, int fflag)
+ {
+@@ -224,6 +225,7 @@
+ 	dolastlog(quietlog);
+ #endif
+ }
++#endif /* !__minix */
+ 
+ #ifdef SUPPORT_UTMPX
+ static void
+diff -ru nbsdsrc/src/usr.bin/login/login.c usr.bin/login/login.c
+--- nbsdsrc/src/usr.bin/login/login.c
++++ usr.bin/login/login.c
+@@ -48,6 +48,10 @@
+  * login -f name	(for pre-authenticated login: datakit, xterm, etc.)
+  */
+ 
++#ifdef __minix
++#undef notdef
++#endif /* __minix */
++
+ #include <sys/param.h>
+ #include <sys/stat.h>
+ #include <sys/time.h>
+@@ -100,6 +104,7 @@
+ #endif
+ 
+ static void	 checknologin(char *);
++void add2env(char **, char *, int);
+ #ifdef KERBEROS5
+ int	 k5login(struct passwd *, char *, char *, char *);
+ void	 k5destroy(void);
+@@ -136,7 +141,10 @@
+ main(int argc, char *argv[])
+ {
+ 	struct group *gr;
++#ifndef __minix
++	/* unused variable */
+ 	struct stat st;
++#endif
+ 	int ask, ch, cnt, fflag, hflag, pflag, sflag, quietlog, rootlogin, rval;
+ 	int Fflag;
+ 	uid_t uid, saved_uid;
+@@ -236,7 +244,9 @@
+ 			break;
+ 		}
+ 
++#ifndef __minix
+ 	setproctitle(NULL);
++#endif
+ 	argc -= optind;
+ 	argv += optind;
+ 
+@@ -426,6 +436,9 @@
+ 		(void)setpriority(PRIO_PROCESS, 0, 0);
+ 
+ 	ttycheck:
++#ifndef __minix
++		/* Only console is secure in Minix */
++
+ 		/*
+ 		 * If trying to log in as root without Kerberos,
+ 		 * but with insecure terminal, refuse the login attempt.
+@@ -443,7 +456,7 @@
+ 				     pwd->pw_name, tty);
+ 			continue;
+ 		}
+-
++#endif
+ 		if (pwd && !rval)
+ 			break;
+ 
+@@ -547,8 +560,9 @@
+ 
+ 	}
+ 	/* Nothing else left to fail -- really log in. */
++#ifndef __minix
+ 	update_db(quietlog, rootlogin, fflag);
+-
++#endif
+ 	(void)chown(ttyn, pwd->pw_uid,
+ 	    (gr = getgrnam(TTYGRPNAME)) ? gr->gr_gid : pwd->pw_gid);
+ 
+@@ -580,10 +594,11 @@
+ 	(void)setgid(pwd->pw_gid);
+ 
+ 	initgroups(username, pwd->pw_gid);
+-	
++
++#ifndef __minix	
+ 	if (nested == NULL && setlogin(pwd->pw_name) < 0)
+ 		syslog(LOG_ERR, "setlogin() failure: %m");
+-
++#endif
+ 	/* Discard permissions last so can't get killed and drop core. */
+ 	if (rootlogin)
+ 		(void)setuid(0);
+@@ -591,8 +606,9 @@
+ 		(void)setuid(pwd->pw_uid);
+ #endif
+ 
+-	if (*pwd->pw_shell == '\0')
++	if (*pwd->pw_shell == '\0' || *pwd->pw_shell == '\n') {
+ 		pwd->pw_shell = _PATH_BSHELL;
++	}
+ #ifdef LOGIN_CAP
+ 	if ((shell = login_getcapstr(lc, "shell", NULL, NULL)) != NULL) {
+ 		if ((shell = strdup(shell)) == NULL) {
+@@ -602,9 +618,11 @@
+ 		pwd->pw_shell = shell;
+ 	}
+ #endif
+-	
++
++#ifndef __minix	
+ 	(void)setenv("HOME", pwd->pw_dir, 1);
+ 	(void)setenv("SHELL", pwd->pw_shell, 1);
++#endif
+ 	if (term[0] == '\0') {
+ 		char *tt = (char *)stypeof(tty);
+ #ifdef LOGIN_CAP
+@@ -614,6 +632,7 @@
+ 		/* unknown term -> "su" */
+ 		(void)strlcpy(term, tt != NULL ? tt : "su", sizeof(term));
+ 	}
++#ifndef __minix
+ 	(void)setenv("TERM", term, 0);
+ 	(void)setenv("LOGNAME", pwd->pw_name, 1);
+ 	(void)setenv("USER", pwd->pw_name, 1);
+@@ -628,7 +647,80 @@
+ 	if (krb5tkfile_env)
+ 		(void)setenv("KRB5CCNAME", krb5tkfile_env, 1);
+ #endif
++#endif /* !__minix */
+ 
++#ifdef __minix
++	char **env;
++	int ap, envsiz;
++
++#define EXTRA_ENV	6
++
++	char user[32];
++	char logname[35];
++	char home[128];
++	char usershell[128];
++	char terminal[128];
++
++	char *bp, *sh, *argx[8], **ep;
++	char argx0[64];
++
++	/* Create the argv[] array from the pw_shell field. */
++	ap = 0;
++	argx[ap++] = argx0;
++	if (pwd->pw_shell[0]) {
++		sh = pwd->pw_shell;
++		bp = sh;
++		while (*bp) {
++			while (*bp && *bp != ' ' && *bp != '\t') bp++;
++			if (*bp == ' ' || *bp == '\t') {
++				*bp++ = '\0';	/* mark end of string */
++				argx[ap++] = bp;
++			}
++		}
++	} else
++	argx[ap] = NULL;
++	strcpy(argx0, "-");	/* most shells need it for their .profile */
++	if ((bp= strrchr(sh, '/')) == NULL) bp = sh; else bp++;
++	strncat(argx0, bp, sizeof(argx0) - 2);
++	
++	/* Set the environment */
++	if (pflag)
++	{
++		for (ep= environ; *ep; ep++)
++			;
++	}
++	else
++		ep= environ;
++
++	envsiz= ep-environ;
++	env= calloc(envsiz + EXTRA_ENV, sizeof(*env));
++	if (env == NULL)
++	{
++		fprintf(stderr, "login: out of memory\n");
++		exit(1);
++	}
++	int i;
++	for (i= 0; i<envsiz; i++)
++		env[i]= environ[i];
++
++	
++	strcpy(user, "USER=");
++	strcat(user, pwd->pw_name);
++	add2env(env, user, 1);
++	strcpy(logname, "LOGNAME=");
++	strcat(logname, pwd->pw_name);
++	add2env(env, logname, 1);
++	strcpy(home, "HOME=");
++	strcat(home, pwd->pw_dir);
++	add2env(env, home, 1);
++	strcpy(usershell, "SHELL=");
++	strcat(usershell, pwd->pw_shell);
++	add2env(env, usershell, 1);
++	strcpy(terminal, "TERM=");
++	strcat(terminal, term);
++	add2env(env, terminal, 0);
++#endif
++
+ 	if (tty[sizeof("tty")-1] == 'd')
+ 		syslog(LOG_INFO, "DIALUP %s, %s", tty, pwd->pw_name);
+ 
+@@ -664,11 +756,13 @@
+ 			fname = _PATH_MOTDFILE;
+ 		motd(fname);
+ 
++#ifndef __minix
+ 		(void)snprintf(tbuf,
+ 		    sizeof(tbuf), "%s/%s", _PATH_MAILDIR, pwd->pw_name);
+ 		if (stat(tbuf, &st) == 0 && st.st_size != 0)
+ 			(void)printf("You have %smail.\n",
+ 			    (st.st_mtime > st.st_atime) ? "new " : "");
++#endif
+ 	}
+ 
+ #ifdef LOGIN_CAP
+@@ -680,9 +774,11 @@
+ 	(void)signal(SIGINT, SIG_DFL);
+ 	(void)signal(SIGTSTP, SIG_IGN);
+ 
++#ifndef __minix
+ 	tbuf[0] = '-';
+ 	(void)strlcpy(tbuf + 1, (p = strrchr(pwd->pw_shell, '/')) ?
+ 	    p + 1 : pwd->pw_shell, sizeof(tbuf) - 1);
++#endif
+ 
+ 	/* Wait to change password until we're unprivileged */
+ 	if (need_chpass) {
+@@ -713,7 +809,12 @@
+ 	if (login_krb5_get_tickets)
+ 		k5_write_creds();
+ #endif
++
++#ifdef __minix
++	execve(pwd->pw_shell, argx, env);
++#else
+ 	execlp(pwd->pw_shell, tbuf, NULL);
++#endif
+ 	err(EXIT_FAILURE, "%s", pwd->pw_shell);
+ }
+ 
+@@ -780,3 +881,26 @@
+ 	    getprogname());
+ 	exit(EXIT_FAILURE);
+ }
++
++#ifdef __minix
++void add2env(char **env, char *entry, int replace)
++{
++/* Replace an environment variable with entry or add entry if the environment
++ * variable doesn't exit yet. 
++ */
++	char *cp;
++	int keylen;
++
++	cp= strchr(entry, '=');
++	keylen= cp-entry+1;
++
++	for(; *env; env++)
++	{
++		if (strncmp(*env, entry, keylen) == 0) {
++			if (!replace) return;		/* Don't replace */
++			break;
++		}
++	}
++	*env= entry;
++}
++#endif

@@ -57,9 +57,6 @@ SUBDIR+=ash date find finger ls man write \
 	cron crontab fetch id ipcs leave logger \
 	mail pax reboot service tar
 
-#Ones which depend on old crypt, but we want them.
-#Preferably port the NetBSD version of these.
-#SUBDIR+=su
 .endif # NEED_NBSDLIBC
 
 # utilities we don't want anymore in the base system.

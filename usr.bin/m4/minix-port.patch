@@ -1,0 +1,12 @@
+diff -ru nbsdsrc/src/usr.bin/m4/Makefile usr.bin/m4/Makefile
+--- nbsdsrc/src/usr.bin/m4/Makefile
++++ usr.bin/m4/Makefile
+@@ -16,7 +16,7 @@
+ 	ohash_qlookupi.c strtonum.c
+ YHEADER=1
+ .if (${HOSTPROG:U} == "")
+-DPADD+=		${LIBUTIL} ${LIBL}
++DPADD+=		${LIBMINIXUTIL} ${LIBL}
+ LDADD+=		-lutil -ll
+ .endif
+ 

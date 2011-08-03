@@ -5,8 +5,13 @@ PROG=	man
 SRCS=	man.c manconf.c
 MAN=	man.1 man.conf.5
 
+.if defined(NEED_NBSDLIBC)
+LDADD+=-lutil
+DPADD+=${LIBUTIL}
+.else
 DPADD+=	${LIBMINIXUTIL}
 LDADD+=	-lminixutil
+.endif
 
 FILES=man.conf
 FILESDIR=/etc
