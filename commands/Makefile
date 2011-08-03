@@ -2,48 +2,68 @@
 
 .include <bsd.own.mk>
 
-SUBDIR=	aal add_route adduser arp ash at autil awk \
+.if !defined(NEED_NBSDLIBC)
+SUBDIR=	aal add_route arp at autil awk \
 	backup badblocks banner basename binpackage \
 	binpackages bzip2 bzip2recover cal calendar \
 	cat cawf cd  cdprobe checkhier chmem \
-	chmod chown chroot ci cksum cleantmp clear cmp co \
-	comm compress cp crc cron crontab cut date \
-	dd de decomp16 DESCRIBE dev2name devsize df dhcpd \
+	chroot cksum cleantmp clear cmp \
+	comm compress cp crc cut \
+	dd decomp16 DESCRIBE dev2name devsize df dhcpd \
 	dhrystone diff dirname  dis386 dis88 diskctl du dumpcore \
-	ed eject elle elvis env expand factor file \
-	find finger fingerd fix fold format fortune fsck.mfs \
-	ftp101 ftpd200 gcov-pull getty grep head hexdump host \
-	hostaddr id ifconfig ifdef install \
-	intr ipcrm ipcs irdpd isoread join kill last leave \
-	less lex loadkeys loadramdisk logger login look lp \
-	lpd ls lspci M mail make  MAKEDEV man \
+	ed eject env expand factor file \
+	fingerd fix fold format fortune fsck.mfs \
+	ftp101 gcov-pull getty grep head hexdump host \
+	hostaddr ifconfig ifdef \
+	intr ipcrm irdpd isoread join kill last \
+	less lex loadkeys loadramdisk look lp \
+	lpd lspci M make  MAKEDEV \
 	mdb mdocml mesg mined ackmkdep mkdir mkfifo mkfs.mfs mknod \
 	mkproto modem mount mt netconf newroot nice acknm nohup \
-	nonamed od passwd paste patch pax \
+	nonamed od paste patch \
 	ping postinstall poweroff pr prep printf printroot \
-	profile progressbar proto pr_routes ps pwd pwdauth \
-	ramdisk rarpd rawspeed rcp rdate readall readclock \
-	readfs reboot remsync rev rget rlogin rlogind rmdir \
-	rotate rsh rshd sed service setup shar acksize \
+	profile progressbar proto pr_routes ps pwd \
+	ramdisk rarpd rawspeed rdate readall readclock \
+	readfs remsync rev rget rmdir \
+	rotate sed setup shar acksize \
 	sleep slip sort spell split srccrc ackstrip \
-	stty su sum svclog swifi sync synctree sysenv \
-	syslogd tail tar tcpd tcpdp tcpstat tee telnet \
+	stty sum svclog swifi sync synctree sysenv \
+	syslogd tail tcpd tcpdp tcpstat tee telnet \
 	telnetd term termcap tget time tinyhalt touch tr \
 	truncate tsort tty udpstat umount uname unexpand \
 	unstack update uud uue version vol wc \
-	whereis which who write writeisofs fetch \
+	whereis which who writeisofs \
 	xargs yacc yes zdump zic zmodem pkgin_cd \
 	mktemp
 
+#To be replaced by NetBSD version
+SUBDIR+=install
+
 .if ${COMPILER_TYPE} == "gnu"
-SUBDIR += elf2aout
+SUBDIR+=elf2aout
 .endif
 
 .if ${ARCH} == "i386"
-SUBDIR+=	atnormalize dosread fdisk loadfont \
+SUBDIR+=atnormalize dosread fdisk loadfont \
 	autopart part partition playwave postmort \
 	recwave repartition screendump padtext
-SUBDIR+=	acd asmconv gas2ack
+SUBDIR+=acd asmconv gas2ack
 .endif
+.endif # !NEED_NBSDLIBC
+
+.if defined(NEED_NBSDLIBC)
+#Compile them with new libc/clang.
+SUBDIR+=ash date find finger ls man write \
+	cron crontab fetch id ipcs leave logger \
+	mail pax reboot service tar
+
+#Ones which depend on old crypt, but we want them.
+#Preferably port the NetBSD version of these.
+#SUBDIR+=su
+.endif # NEED_NBSDLIBC
+
+# utilities we don't want anymore in the base system.
+#SUBDIR+=rlogin rlogind rsh rshd rcpx co ci ftpd200 \
+	pwdauth de elle elvis
 
 .include <bsd.subdir.mk>

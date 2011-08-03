@@ -59,14 +59,20 @@ elf-libraries: includes
 
 commands: includes libraries
 	$(MAKE) -C commands all
+	$(MAKE) -C commands NEED_NBSDLIBC=yes all
 	$(MAKE) -C bin all
+	$(MAKE) -C sbin all
 	$(MAKE) -C usr.bin all
+	$(MAKE) -C usr.sbin all
 
 dep-all:
 	$(MAKE) CC=cc -C boot dependall
 	$(MAKE) -C commands dependall
+	$(MAKE) -C commands NEED_NBSDLIBC=yes dependall
 	$(MAKE) -C bin dependall
+	$(MAKE) -C sbin dependall
 	$(MAKE) -C usr.bin dependall
+	$(MAKE) -C usr.sbin dependall
 	$(MAKE) -C kernel dependall
 	$(MAKE) -C servers dependall
 	$(MAKE) -C drivers dependall
@@ -80,16 +86,22 @@ etcforce:
 all:
 	$(MAKE) CC=cc -C boot all
 	$(MAKE) -C commands all
+	$(MAKE) -C commands NEED_NBSDLIBC=yes all
 	$(MAKE) -C bin all
+	$(MAKE) -C sbin all
 	$(MAKE) -C usr.bin all
+	$(MAKE) -C usr.sbin all
 	$(MAKE) -C tools all
 
 install:
 	$(MAKE) CC=cc -C boot install
 	$(MAKE) -C man install makedb
 	$(MAKE) -C commands install
+	$(MAKE) -C commands NEED_NBSDLIBC=yes install
 	$(MAKE) -C bin install
+	$(MAKE) -C sbin install
 	$(MAKE) -C usr.bin install
+	$(MAKE) -C usr.sbin install
 	$(MAKE) -C servers install
 	$(MAKE) -C share install
 	$(MAKE) -C tools install
@@ -97,8 +109,11 @@ install:
 clean: mkfiles
 	$(MAKE) -C boot clean
 	$(MAKE) -C commands clean
+	$(MAKE) -C commands NEED_NBSDLIBC=yes clean
 	$(MAKE) -C bin clean
+	$(MAKE) -C sbin clean
 	$(MAKE) -C usr.bin clean
+	$(MAKE) -C usr.sbin clean
 	$(MAKE) -C tools clean
 	$(MAKE) -C lib clean_all
 	$(MAKE) -C test clean
@@ -107,6 +122,9 @@ cleandepend: mkfiles
 	$(MAKE) -C lib cleandepend_all
 	$(MAKE) -C boot cleandepend
 	$(MAKE) -C commands cleandepend
+	$(MAKE) -C commands NEED_NBSDLIBC=yes cleandepend
 	$(MAKE) -C bin cleandepend
+	$(MAKE) -C sbin cleandepend
 	$(MAKE) -C usr.bin cleandepend
+	$(MAKE) -C usr.sbin cleandepend
 	$(MAKE) -C tools cleandepend
