@@ -54,7 +54,7 @@ SUBDIR+=acd asmconv gas2ack
 .if defined(NEED_NBSDLIBC)
 #Compile them with new libc/clang.
 SUBDIR+=ash date find finger ls man write \
-	cron crontab fetch id ipcs leave logger \ 
+	cron crontab fetch id ipcs leave logger \
 	mail pax reboot service tar
 
 #Ones which depend on old crypt, but we want them.
