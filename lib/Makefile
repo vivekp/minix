@@ -6,12 +6,12 @@ LIBM_DIR=	nbsd_libm
 LIBCOMPAT_DIR=	nbsd_libcompat_minix
 LIBMINLIB_DIR=	nbsd_libminlib
 LIBASYN_DIR=	nbsd_libasyn
-LIBUTIL_DIR=	nbsd_libutil
+LIBUTIL_DIR=	libutil
 .endif
 
 LIBC_DIR?=	libc
 LIBM_DIR?=	libm
-LIBUTIL_DIR?=	libutil
+LIBUTIL_DIR?=	libminixutil
 LIBCOMPAT_DIR?=
 LIBMINLIB_DIR?=
 LIBASYN_DIR?=

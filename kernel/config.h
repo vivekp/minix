@@ -43,7 +43,6 @@
 #define USE_MEMSET  	   1	/* write char to a given memory area */
 #define USE_RUNCTL         1	/* control stop flags of a process */
 #define USE_UPDATE         1	/* update a process into another */
-#define USE_MCONTEXT       1    /* enable getting and setting of mach context*/
 #define USE_STATECTL       1    /* let a process control its state */
 
 /* Length of program names stored in the process table. This is only used
@@ -57,7 +56,7 @@
  * the maximum needed by any given driver. The number of interrupt hooks may
  * be incremented on systems with many device drivers. 
  */
-#ifndef CONFIG_APIC
+#ifndef USE_APIC
 #define NR_IRQ_HOOKS	  16		/* number of interrupt hooks */
 #else
 #define NR_IRQ_HOOKS	  64		/* number of interrupt hooks */

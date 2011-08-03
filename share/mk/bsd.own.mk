@@ -758,7 +758,7 @@ _MKVARS.yes= \
 	MKYP
 #MINIX-specific vars
 _MKVARS.yes+= \
-	MKWATCHDOG
+	MKWATCHDOG MKACPI MKAPIC MKMCONTEXT
 .for var in ${_MKVARS.yes}
 ${var}?=	yes
 .endfor
@@ -775,7 +775,7 @@ _MKVARS.no= \
 	MKUNPRIVED MKUPDATE MKX11 MKZFS
 #MINIX-specific vars
 _MKVARS.no+= \
-	MKIMAGEONLY MKEMBED
+	MKIMAGEONLY MKSMALL
 .for var in ${_MKVARS.no}
 ${var}?=no
 .endfor
@@ -817,8 +817,11 @@ MKNLS:=		no
 .endif
 
 # MINIX
-.if ${MKEMBED} == "yes"
+.if ${MKSMALL} == "yes"
 MKWATCHDOG:=	no
+MKACPI:=	no
+MKAPIC:=	no
+MKMCONTEXT:=	no
 .endif
 
 #
@@ -880,7 +883,7 @@ ${var}?= no
 # variable is set to "no".
 #
 .for var in USE_HESIOD USE_INET6 USE_KERBEROS USE_LDAP USE_PAM USE_YP \
-USE_WATCHDOG
+USE_WATCHDOG USE_ACPI USE_APIC USE_MCONTEXT
 .if (${${var:S/USE_/MK/}} == "no")
 ${var}:= no
 .else
