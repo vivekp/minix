@@ -5,7 +5,7 @@ lib/nbsd_libm		src/lib/libm
 lib/libcrypt		src/lib/libcrypt
 lib/libterminfo		src/lib/libterminfo
 lib/libcurses		src/lib/libcurses
-lib/nbsd_libutil	src/lib/libutil
+lib/libutil		src/lib/libutil
 nbsd_include		src/include
 bin/chmod		src/bin/chmod
 sbin/chown		src/sbin/chown
@@ -14,9 +14,11 @@ usr.bin/indent		src/usr.bin/indent
 usr.bin/sed		src/usr.bin/sed
 usr.bin/stat		src/usr.bin/stat
 usr.bin/tic		src/usr.bin/tic
+usr.bin/login		src/usr.bin/login
 usr.bin/mkdep		src/usr.bin/mkdep
+usr.bin/newgrp		src/usr.bin/newgrp
 usr.bin/uniq		src/usr.bin/uniq
-usr.bin/sort		src/usr.bin/sort
+usr.bin/su		src/usr.bin/su
 usr.bin/chpass       	src/usr.bin/chpass
 usr.bin/passwd		src/usr.bin/passwd
 usr.sbin/pwd_mkdb	src/usr.sbin/pwd_mkdb

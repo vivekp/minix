@@ -1,0 +1,25 @@
+diff -ru nbsdsrc/src/lib/libcurses/tstp.c lib/libcurses/tstp.c
+--- nbsdsrc/src/lib/libcurses/tstp.c
++++ lib/libcurses/tstp.c
+@@ -38,6 +38,10 @@
+ #endif
+ #endif				/* not lint */
+ 
++#ifndef TCSASOFT
++#define TCSASOFT 0
++#endif
++
+ #include <sys/ioctl.h>
+ 
+ #include <errno.h>
+diff -ru nbsdsrc/src/lib/libcurses/tty.c lib/libcurses/tty.c
+--- nbsdsrc/src/lib/libcurses/tty.c
++++ lib/libcurses/tty.c
+@@ -59,6 +59,7 @@
+ #ifdef TCSASOFT
+ int	__tcaction = 1;			/* Ignore hardware settings. */
+ #else
++#define TCSASOFT 0
+ int	__tcaction = 0;
+ #endif
+ 

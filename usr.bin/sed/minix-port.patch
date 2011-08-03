@@ -1,0 +1,12 @@
+diff -ru nbsdsrc/src/usr.bin/sed/process.c usr.bin/sed/process.c
+--- nbsdsrc/src/usr.bin/sed/process.c
++++ usr.bin/sed/process.c
+@@ -85,6 +85,8 @@
+ #include <sys/ioctl.h>
+ #include <sys/uio.h>
+ 
++#include <minix/termios.h>
++
+ #include <ctype.h>
+ #include <errno.h>
+ #include <fcntl.h>

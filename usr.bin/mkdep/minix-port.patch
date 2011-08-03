@@ -1,0 +1,67 @@
+diff -ru nbsdsrc/src/usr.bin/mkdep/findcc.h usr.bin/mkdep/findcc.h
+--- nbsdsrc/src/usr.bin/mkdep/findcc.h
++++ usr.bin/mkdep/findcc.h
+@@ -1,3 +1,7 @@
++#ifndef __minix
+ #define DEFAULT_CC		"cc"
++#else
++#define DEFAULT_CC		"clang"
++#endif
+ 
+ char *findcc(const char *);
+diff -ru nbsdsrc/src/usr.bin/mkdep/mkdep.c usr.bin/mkdep/mkdep.c
+--- nbsdsrc/src/usr.bin/mkdep/mkdep.c
++++ usr.bin/mkdep/mkdep.c
+@@ -40,7 +40,9 @@
+ __RCSID("$NetBSD: mkdep.c,v 1.35 2010/05/26 18:07:34 christos Exp $");
+ #endif /* not lint */
+ 
++#ifndef __minix
+ #include <sys/mman.h>
++#endif
+ #include <sys/param.h>
+ #include <sys/wait.h>
+ #include <ctype.h>
+@@ -197,6 +199,9 @@
+ 	const char *fname;
+ 	const char *suffixes = NULL, *s;
+ 	suff_list_t *suff_list = NULL, *sl;
++#ifdef __minix
++	size_t nr;
++#endif
+ 
+ 	suf = NULL;		/* XXXGCC -Wuninitialized [sun2] */
+ 	sl = NULL;		/* XXXGCC -Wuninitialized [sun2] */
+@@ -308,11 +313,20 @@
+ 			close(fd);
+ 			continue;
+ 		}
++#ifndef __minix
+ 		buf = mmap(NULL, sz, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+ 		close(fd);
+ 
+ 		if (buf == MAP_FAILED)
+ 			err(EXIT_FAILURE, "unable to mmap file %s", fname);
++#else
++		buf = malloc(sz);
++		if (buf == NULL)
++			err(EXIT_FAILURE, "malloc");
++		if ((nr = pread(fd, buf, sz, 0)) != sz)
++			err(EXIT_FAILURE, "read error %s", fname);
++		close(fd);		
++#endif
+ 		lim = buf + sz - 1;
+ 
+ 		/* Remove leading "./" from filenames */
+@@ -392,7 +406,11 @@
+ 				save_for_optional(colon + 1, eol);
+ 			line = eol;
+ 		}
++#ifndef __minix
+ 		munmap(buf, sz);
++#else
++		free(buf);
++#endif
+ 	}
+ 
+ 	if (oflag && opt != NULL) {

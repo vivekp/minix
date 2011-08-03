@@ -1,0 +1,14 @@
+diff -ru nbsdsrc/src/usr.bin/m4/Makefile usr.bin/m4/Makefile
+--- nbsdsrc/src/usr.bin/m4/Makefile
++++ usr.bin/m4/Makefile
+@@ -16,8 +16,8 @@
+ 	ohash_qlookupi.c strtonum.c
+ YHEADER=1
+ .if (${HOSTPROG:U} == "")
+-DPADD+=		${LIBUTIL} ${LIBL}
+-LDADD+=		-lutil -ll
++DPADD+=		${LIBMINIXUTIL} ${LIBL}
++LDADD+=		-lminixutil -ll
+ .endif
+ 
+ tokenizer.o: parser.h

@@ -435,7 +435,7 @@ diff -ru nbsdsrc/src/lib/libc/gdtoa/gdtoaimp.h lib/nbsd_libc/gdtoa/gdtoaimp.h
 diff -ru nbsdsrc/src/lib/libc/gen/Makefile.inc lib/nbsd_libc/gen/Makefile.inc
 --- nbsdsrc/src/lib/libc/gen/Makefile.inc
 +++ lib/nbsd_libc/gen/Makefile.inc
-@@ -2,9 +2,57 @@
+@@ -2,9 +2,60 @@
  #	from: @(#)Makefile.inc	8.6 (Berkeley) 5/4/95
  
  # gen sources
@@ -459,6 +459,9 @@ diff -ru nbsdsrc/src/lib/libc/gen/Makefile.inc lib/nbsd_libc/gen/Makefile.inc
 +#
 +# Already in getprogname
 +#	setprogname.c
++
++# To be removed when we completely switch to NetBSD passwd format.
++SRCS+= __minix_getpwent.c
 +
  SRCS+= 	_errno.c alarm.c alphasort.c arc4random.c assert.c basename.c clock.c \
 +	closedir.c ctermid.c ctype_.c daemon.c \
@@ -493,7 +496,7 @@ diff -ru nbsdsrc/src/lib/libc/gen/Makefile.inc lib/nbsd_libc/gen/Makefile.inc
  	closedir.c closefrom.c confstr.c ctermid.c ctype_.c daemon.c \
  	dehumanize_number.c devname.c dirname.c disklabel.c err.c errx.c \
  	errlist.c errno.c execl.c execle.c execlp.c execv.c execvp.c \
-@@ -32,6 +80,7 @@
+@@ -32,6 +83,7 @@
  	toupper_.c ualarm.c ulimit.c uname.c unvis.c usleep.c utime.c utmp.c \
  	utmpx.c valloc.c vis.c wait.c wait3.c waitpid.c warn.c warnx.c \
  	vwarn.c vwarnx.c verr.c verrx.c wordexp.c
@@ -501,7 +504,7 @@ diff -ru nbsdsrc/src/lib/libc/gen/Makefile.inc lib/nbsd_libc/gen/Makefile.inc
  
  # indirect reference stubs, to be removed soon.
  SRCS+=	_err.c _errx.c \
-@@ -163,7 +212,12 @@
+@@ -163,7 +215,12 @@
  CPPFLAGS.tolower_.c+=	-I${LIBCDIR}/locale
  CPPFLAGS.toupper_.c+=	-I${LIBCDIR}/locale
  
@@ -934,7 +937,20 @@ diff -ru nbsdsrc/src/lib/libc/gen/getlogin.c lib/nbsd_libc/gen/getlogin.c
 diff -ru nbsdsrc/src/lib/libc/gen/getpwent.c lib/nbsd_libc/gen/getpwent.c
 --- nbsdsrc/src/lib/libc/gen/getpwent.c
 +++ lib/nbsd_libc/gen/getpwent.c
-@@ -671,7 +671,11 @@
+@@ -139,7 +139,12 @@
+ 
+ const char __yp_token[] = "__YP!";	/* Let pwd_mkdb pull this in. */
+ 
++/* Fallback functions in case we don't have master.passwd file. */
++struct passwd *__minix_getpwent(void);
++struct passwd *__minix_getpwuid(uid_t );
++struct passwd *__minix_getpwnam(const char *);
+ 
++
+ /*
+  * The pwd.db lookup techniques and data extraction code here must be kept
+  * in sync with that in `pwd_mkdb'.
+@@ -671,7 +676,11 @@
  _files_getpwuid(void *nsrv, void *nscb, va_list ap)
  {
  	struct passwd	**retval = va_arg(ap, struct passwd **);
@@ -946,7 +962,7 @@ diff -ru nbsdsrc/src/lib/libc/gen/getpwent.c lib/nbsd_libc/gen/getpwent.c
  
  	int	rv, rerror;
  
-@@ -696,7 +700,11 @@
+@@ -696,7 +705,11 @@
  _files_getpwuid_r(void *nsrv, void *nscb, va_list ap)
  {
  	int		*retval	= va_arg(ap, int *);
@@ -958,7 +974,7 @@ diff -ru nbsdsrc/src/lib/libc/gen/getpwent.c lib/nbsd_libc/gen/getpwent.c
  	struct passwd	*pw	= va_arg(ap, struct passwd *);
  	char		*buffer	= va_arg(ap, char *);
  	size_t		 buflen	= va_arg(ap, size_t);
-@@ -992,7 +1000,11 @@
+@@ -992,7 +1005,11 @@
  _dns_getpwuid(void *nsrv, void *nscb, va_list ap)
  {
  	struct passwd	**retval = va_arg(ap, struct passwd **);
@@ -970,7 +986,7 @@ diff -ru nbsdsrc/src/lib/libc/gen/getpwent.c lib/nbsd_libc/gen/getpwent.c
  
  	int	rv, rerror;
  
-@@ -1019,7 +1031,11 @@
+@@ -1019,7 +1036,11 @@
  _dns_getpwuid_r(void *nsrv, void *nscb, va_list ap)
  {
  	int		*retval	= va_arg(ap, int *);
@@ -982,7 +998,7 @@ diff -ru nbsdsrc/src/lib/libc/gen/getpwent.c lib/nbsd_libc/gen/getpwent.c
  	struct passwd	*pw	= va_arg(ap, struct passwd *);
  	char		*buffer	= va_arg(ap, char *);
  	size_t		 buflen	= va_arg(ap, size_t);
-@@ -1508,7 +1524,11 @@
+@@ -1508,7 +1529,11 @@
  _nis_getpwuid(void *nsrv, void *nscb, va_list ap)
  {
  	struct passwd	**retval = va_arg(ap, struct passwd **);
@@ -994,7 +1010,7 @@ diff -ru nbsdsrc/src/lib/libc/gen/getpwent.c lib/nbsd_libc/gen/getpwent.c
  
  	int	rv, rerror;
  
-@@ -1534,7 +1554,11 @@
+@@ -1534,7 +1559,11 @@
  _nis_getpwuid_r(void *nsrv, void *nscb, va_list ap)
  {
  	int		*retval	= va_arg(ap, int *);
@@ -1006,7 +1022,7 @@ diff -ru nbsdsrc/src/lib/libc/gen/getpwent.c lib/nbsd_libc/gen/getpwent.c
  	struct passwd	*pw	= va_arg(ap, struct passwd *);
  	char		*buffer	= va_arg(ap, char *);
  	size_t		 buflen	= va_arg(ap, size_t);
-@@ -1896,9 +1920,15 @@
+@@ -1896,9 +1925,15 @@
  		    &crv, name, pw, buffer, buflen, &cpw);
  		break;
  	case _PW_KEYBYUID:
@@ -1022,7 +1038,7 @@ diff -ru nbsdsrc/src/lib/libc/gen/getpwent.c lib/nbsd_libc/gen/getpwent.c
  		break;
  	default:
  		abort();
-@@ -2301,7 +2331,11 @@
+@@ -2301,7 +2336,11 @@
  _compat_getpwuid(void *nsrv, void *nscb, va_list ap)
  {
  	struct passwd	**retval = va_arg(ap, struct passwd **);
@@ -1034,7 +1050,7 @@ diff -ru nbsdsrc/src/lib/libc/gen/getpwent.c lib/nbsd_libc/gen/getpwent.c
  
  	int	rv, rerror;
  
-@@ -2326,7 +2360,11 @@
+@@ -2326,7 +2365,11 @@
  _compat_getpwuid_r(void *nsrv, void *nscb, va_list ap)
  {
  	int		*retval	= va_arg(ap, int *);
@@ -1046,7 +1062,25 @@ diff -ru nbsdsrc/src/lib/libc/gen/getpwent.c lib/nbsd_libc/gen/getpwent.c
  	struct passwd	*pw	= va_arg(ap, struct passwd *);
  	char		*buffer	= va_arg(ap, char *);
  	size_t		 buflen	= va_arg(ap, size_t);
-@@ -2482,8 +2520,13 @@
+@@ -2375,7 +2418,7 @@
+ 	r = nsdispatch(NULL, dtab, NSDB_PASSWD, "getpwent", __nsdefaultcompat,
+ 	    &retval);
+ 	mutex_unlock(&_pwmutex);
+-	return (r == NS_SUCCESS) ? retval : NULL;
++	return (r == NS_SUCCESS) ? retval : (retval = __minix_getpwent());
+ }
+ 
+ int
+@@ -2430,7 +2473,7 @@
+ 	rv = nsdispatch(NULL, dtab, NSDB_PASSWD, "getpwnam", __nsdefaultcompat,
+ 	    &retval, name);
+ 	mutex_unlock(&_pwmutex);
+-	return (rv == NS_SUCCESS) ? retval : NULL;
++	return (rv == NS_SUCCESS) ? retval : (retval = __minix_getpwnam(name));
+ }
+ 
+ int
+@@ -2482,10 +2525,15 @@
  	};
  
  	mutex_lock(&_pwmutex);
@@ -1058,9 +1092,12 @@ diff -ru nbsdsrc/src/lib/libc/gen/getpwent.c lib/nbsd_libc/gen/getpwent.c
  	    &retval, uid);
 +#endif
  	mutex_unlock(&_pwmutex);
- 	return (rv == NS_SUCCESS) ? retval : NULL;
+-	return (rv == NS_SUCCESS) ? retval : NULL;
++	return (rv == NS_SUCCESS) ? retval : (retval = __minix_getpwuid(uid));
  }
-@@ -2509,8 +2552,14 @@
+ 
+ int
+@@ -2509,8 +2557,14 @@
  	*result = NULL;
  	retval = 0;
  	mutex_lock(&_pwmutex);
@@ -1392,6 +1429,18 @@ diff -ru nbsdsrc/src/lib/libc/gen/opendir.c lib/nbsd_libc/gen/opendir.c
  
  	dirp->dd_flags = flags;
  	error = _initdir(dirp, fd, name);
+diff -ru nbsdsrc/src/lib/libc/gen/pw_scan.c lib/nbsd_libc/gen/pw_scan.c
+--- nbsdsrc/src/lib/libc/gen/pw_scan.c
++++ lib/nbsd_libc/gen/pw_scan.c
+@@ -215,6 +215,8 @@
+ 	if (!(pw->pw_shell = strsep(&bp, ":")))		/* shell */
+ 		goto fmt;
+ 
++#undef HAVE_NBTOOL_CONFIG_H
++#define HAVE_NBTOOL_CONFIG_H 1
+ #if ! HAVE_NBTOOL_CONFIG_H
+ 	p = pw->pw_shell;
+ 	if (root && *p)					/* empty == /bin/sh */
 diff -ru nbsdsrc/src/lib/libc/gen/pwcache.c lib/nbsd_libc/gen/pwcache.c
 --- nbsdsrc/src/lib/libc/gen/pwcache.c
 +++ lib/nbsd_libc/gen/pwcache.c

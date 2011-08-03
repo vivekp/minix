@@ -70,7 +70,7 @@ diff -ru nbsdsrc/src/usr.bin/login/login.c usr.bin/login/login.c
  #endif
  
  static void	 checknologin(char *);
-+void add2env(char **env, char *entry, int replace);
++void add2env(char **, char *, int);
  #ifdef KERBEROS5
  int	 k5login(struct passwd *, char *, char *, char *);
  void	 k5destroy(void);
@@ -139,7 +139,18 @@ diff -ru nbsdsrc/src/usr.bin/login/login.c usr.bin/login/login.c
  	/* Discard permissions last so can't get killed and drop core. */
  	if (rootlogin)
  		(void)setuid(0);
-@@ -602,9 +617,11 @@
+@@ -591,8 +606,9 @@
+ 		(void)setuid(pwd->pw_uid);
+ #endif
+ 
+-	if (*pwd->pw_shell == '\0')
++	if (*pwd->pw_shell == '\0' || *pwd->pw_shell == '\n') {
+ 		pwd->pw_shell = _PATH_BSHELL;
++	}
+ #ifdef LOGIN_CAP
+ 	if ((shell = login_getcapstr(lc, "shell", NULL, NULL)) != NULL) {
+ 		if ((shell = strdup(shell)) == NULL) {
+@@ -602,9 +618,11 @@
  		pwd->pw_shell = shell;
  	}
  #endif
@@ -152,7 +163,7 @@ diff -ru nbsdsrc/src/usr.bin/login/login.c usr.bin/login/login.c
  	if (term[0] == '\0') {
  		char *tt = (char *)stypeof(tty);
  #ifdef LOGIN_CAP
-@@ -614,6 +631,7 @@
+@@ -614,6 +632,7 @@
  		/* unknown term -> "su" */
  		(void)strlcpy(term, tt != NULL ? tt : "su", sizeof(term));
  	}
@@ -160,7 +171,7 @@ diff -ru nbsdsrc/src/usr.bin/login/login.c usr.bin/login/login.c
  	(void)setenv("TERM", term, 0);
  	(void)setenv("LOGNAME", pwd->pw_name, 1);
  	(void)setenv("USER", pwd->pw_name, 1);
-@@ -628,7 +646,81 @@
+@@ -628,7 +647,80 @@
  	if (krb5tkfile_env)
  		(void)setenv("KRB5CCNAME", krb5tkfile_env, 1);
  #endif
@@ -175,13 +186,12 @@ diff -ru nbsdsrc/src/usr.bin/login/login.c usr.bin/login/login.c
 +	char user[32];
 +	char logname[35];
 +	char home[128];
-+	char shell[128];
++	char usershell[128];
 +	char terminal[128];
 +
 +	char *bp, *sh, *argx[8], **ep;
 +	char argx0[64];
 +
-+	sh = pwd->pw_shell;
 +	/* Create the argv[] array from the pw_shell field. */
 +	ap = 0;
 +	argx[ap++] = argx0;
@@ -231,9 +241,9 @@ diff -ru nbsdsrc/src/usr.bin/login/login.c usr.bin/login/login.c
 +	strcpy(home, "HOME=");
 +	strcat(home, pwd->pw_dir);
 +	add2env(env, home, 1);
-+	strcpy(shell, "SHELL=");
-+	strcat(shell, pwd->pw_shell);
-+	add2env(env, shell, 1);
++	strcpy(usershell, "SHELL=");
++	strcat(usershell, pwd->pw_shell);
++	add2env(env, usershell, 1);
 +	strcpy(terminal, "TERM=");
 +	strcat(terminal, term);
 +	add2env(env, terminal, 0);
@@ -274,7 +284,7 @@ diff -ru nbsdsrc/src/usr.bin/login/login.c usr.bin/login/login.c
  #endif
 +
 +#ifdef __minix
-+	execve(sh, argx, env);
++	execve(pwd->pw_shell, argx, env);
 +#else
  	execlp(pwd->pw_shell, tbuf, NULL);
 +#endif
