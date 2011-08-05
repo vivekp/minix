@@ -57,7 +57,7 @@ gnu-includes: includes
 elf-libraries: includes
 	$(MAKE) -C lib build_elf
 
-commands: includes libraries
+commands: includes elf-libraries libraries
 	$(MAKE) -C commands all
 	$(MAKE) -C commands NEED_NBSDLIBC=yes all
 	$(MAKE) -C bin all

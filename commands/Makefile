@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-.if !defined(NEED_NBSDLIBC)
+.if !defined(NEED_NBSDLIBC) || (${NEED_NBSDLIBC} == "no")
 SUBDIR=	aal add_route arp at autil awk \
 	backup badblocks banner basename binpackage \
 	binpackages bzip2 bzip2recover cal calendar \
@@ -36,7 +36,7 @@ SUBDIR=	aal add_route arp at autil awk \
 	xargs yacc yes zdump zic zmodem pkgin_cd \
 	mktemp
 
-#To be replaced by NetBSD version
+# To be replaced by NetBSD version
 SUBDIR+=install
 
 .if ${COMPILER_TYPE} == "gnu"
@@ -51,16 +51,12 @@ SUBDIR+=acd asmconv gas2ack
 .endif
 .endif # !NEED_NBSDLIBC
 
-.if defined(NEED_NBSDLIBC)
-#Compile them with new libc/clang.
+.if defined(NEED_NBSDLIBC) && (${NEED_NBSDLIBC} != "no")
+# Compile them with new libc + clang.
 SUBDIR+=ash date find finger ls man write \
 	cron crontab fetch id ipcs leave logger \
 	mail pax reboot service tar
 
 .endif # NEED_NBSDLIBC
-
-# utilities we don't want anymore in the base system.
-#SUBDIR+=rlogin rlogind rsh rshd rcpx co ci ftpd200 \
-	pwdauth de elle elvis
 
 .include <bsd.subdir.mk>
