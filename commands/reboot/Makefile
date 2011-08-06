@@ -1,5 +1,7 @@
 # Makefile for shutdown / halt / reboot.
 
+NEED_NBSDLIBC= yes
+
 PROGS=	shutdown halt
 SRCS.shutdown=	shutdown.c sh_wall.c log.c
 SRCS.halt=	halt.c log.c

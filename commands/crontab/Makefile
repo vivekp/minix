@@ -1,5 +1,7 @@
 # Makefile for crontab.
 
+NEED_NBSDLIBC= yes
+
 .include <bsd.own.mk>
 
 PROG=	crontab

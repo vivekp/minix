@@ -1,3 +1,5 @@
+NEED_NBSDLIBC= yes
+
 PROG=	fetch
 BINDIR=	/usr/bin
 MAN=	fetch.1

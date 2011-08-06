@@ -1,4 +1,6 @@
 # Makefile for service
+NEED_NBSDLIBC=yes
+
 PROG=	service
 
 BINDIR= /bin

@@ -1,3 +1,5 @@
+NEED_NBSDLIBC=yes
+
 PROG=	leave
 MAN=
 

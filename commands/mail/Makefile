@@ -1,3 +1,5 @@
+NEED_NBSDLIBC= yes
+
 PROG=	mail
 BINMODE= 4755
 MAN=
