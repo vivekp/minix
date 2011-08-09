@@ -9,7 +9,7 @@
 #	PROGS	the list of all programs
 #	SORT	if the "tags" file must be sorted, then SORT=-DSORT
 
-PROGS=	elvis ctags ref elvrec fmt elvprsv
+PROGS=	elvis ref elvrec fmt elvprsv
 CPPFLAGS+= -w -DCRUNCH \
 	-DNO_MKEXRC -DNO_CURSORSHAPE -DNO_CHARATTR -DNO_SHOWMODE \
 	-DNO_MODELINE -DNO_OPTCOLS -DNO_DIGRAPH -DNO_EXTENSIONS \
@@ -30,7 +30,6 @@ LINKS+= ${BINDIR}/elvis ${BINDIR}/vi
 .endif
 
 MAN.elvis=
-MAN.ctags=
 MAN.ref=
 MAN.elvrec=
 MAN.fmt=
