@@ -1,0 +1,72 @@
+diff -ru nbsdsrc/src/usr.bin/spell/spell/spell.sh usr.bin/spell/spell/spell.sh
+--- nbsdsrc/src/usr.bin/spell/spell/spell.sh
++++ usr.bin/spell/spell/spell.sh
+@@ -26,7 +26,7 @@
+ # Materiel Command, USAF, under agreement number F39502-99-1-0512.
+ #
+ SPELLPROG=/usr/libexec/spellprog
+-DICT=/usr/share/dict/words
++DICT=/usr/lib/dict/words
+ LOCAL_DICT=/usr/local/share/dict/words
+ STOP=/usr/share/dict/stop
+ LOCAL_STOP=/usr/local/share/dict/stop
+@@ -105,16 +105,16 @@
+ 
+ if [ -n "$HISTFILE" ]; then
+ 	$DEROFF | sort -u | $SPELLPROG -o $TMP $STOP $STOP_LANG | \
+-	    $SPELLPROG $FLAGS $DICT $LANG $EXTRA | sort -u -k1f - $TMP | \
++	    $SPELLPROG $FLAGS $DICT $LANG $EXTRA | sort -u -f +0.0 - $TMP | \
+ 	    tee -a $HISTFILE
+ 	who -m >> $HISTFILE
+ else
+ 	$DEROFF | sort -u | $SPELLPROG -o $TMP $STOP $STOP_LANG | \
+-	    $SPELLPROG $FLAGS $DICT $LANG $EXTRA | sort -u -k1f - $TMP
++	    $SPELLPROG $FLAGS $DICT $LANG $EXTRA | sort -u -f +0.0 - $TMP
+ fi
+ 
+ if [ -n "$VTMP" ]; then
+-	sort -u -k2f -k1 $VTMP
++	sort -u -f +1.0 +0.0 $VTMP
+ fi
+ 
+ exit 0
+diff -ru nbsdsrc/src/usr.bin/spell/spellprog/spellprog.c usr.bin/spell/spellprog/spellprog.c
+--- nbsdsrc/src/usr.bin/spell/spellprog/spellprog.c
++++ usr.bin/spell/spellprog/spellprog.c
+@@ -85,6 +85,7 @@
+ #include <sys/param.h>
+ #include <sys/mman.h>
+ #include <sys/stat.h>
++#include <sys/syslimits.h>
+ 
+ #include <ctype.h>
+ #include <err.h>
+@@ -318,6 +319,9 @@
+ 	int ch, fold, i;
+ 	struct stat sb;
+ 	FILE *file, *found;
++#ifdef __minix
++	size_t nrc;
++#endif
+ 
+ 	setlocale(LC_ALL, "");
+ 
+@@ -359,10 +363,18 @@
+ 			err(1, "%s", argv[i]);
+ 		if (sb.st_size > SIZE_T_MAX)
+ 			errx(1, "%s: %s", argv[i], strerror(EFBIG));
++#ifdef __minix
++		wlists[i].front = malloc(sb.st_size);
++		if (wlists[i].front == NULL)
++			err(EXIT_FAILURE, "malloc");
++		if ((nrc = pread(wlists[i].fd, wlists[i].front, sb.st_size, 0)) != sb.st_size)
++			err(EXIT_FAILURE, "read error");
++#else
+ 		wlists[i].front = mmap(NULL, (size_t)sb.st_size, PROT_READ,
+ 		    MAP_PRIVATE, wlists[i].fd, (off_t)0);
+ 		if (wlists[i].front == MAP_FAILED)
+ 			err(1, "%s", argv[i]);
++#endif
+ 		wlists[i].back = wlists[i].front + (size_t)sb.st_size;
+ 	}
+ 	wlists[i].fd = -1;
