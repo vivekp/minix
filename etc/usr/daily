@@ -53,8 +53,8 @@ cycle 100 log
 cycle  20 ftplog
 cycle 200 aftplog
 
-# Make copies of /etc/passwd and /etc/shadow if they have been changed.
-for file in passwd shadow
+# Make copy of /etc/master.passwd if it has been changed.
+for file in master.passwd
 do
     if cmp -s /etc/$file old/$file.1
     then

@@ -3,4 +3,6 @@
 
 PROG=	chmod
 
+SYMLINKS+=	${BINDIR}/chmod /usr/bin/chmod
+
 .include <bsd.prog.mk>

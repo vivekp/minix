@@ -8,5 +8,6 @@ SYMLINKS+=	${BINDIR}/chown /bin/chgrp
 
 SYMLINKS+=	${BINDIR}/chown /usr/bin/chgrp
 SYMLINKS+=	${BINDIR}/chown /usr/sbin/chown
+SYMLINKS+=	${BINDIR}/chown /usr/bin/chown
 
 .include <bsd.prog.mk>

@@ -1,7 +1,5 @@
 # Makefile for ash.
 
-NEED_NBSDLIBC= yes
-
 .include <bsd.own.mk>
 
 YHEADER=1

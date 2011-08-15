@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-SUBDIR=	aal add_route arp at autil awk \
+SUBDIR=	aal add_route arp ash at autil awk \
 	backup badblocks banner basename binpackage \
 	binpackages bzip2 bzip2recover cal calendar \
 	cat cawf cd  cdprobe checkhier chmem \
@@ -47,7 +47,7 @@ SUBDIR+=acd asmconv gas2ack
 .endif
 
 # Compile them with new libc + clang.
-SUBDIR+=ash date find finger ls man write \
+SUBDIR+=date find finger ls man write \
 	cron crontab fetch id ipcs leave logger \
 	mail pax reboot service tar
 
