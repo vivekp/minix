@@ -8,6 +8,7 @@ lib/libcurses		src/lib/libcurses
 lib/libutil		src/lib/libutil
 nbsd_include		src/include
 bin/chmod		src/bin/chmod
+bin/mkdir		src/bin/mkdir
 sbin/chown		src/sbin/chown
 usr.bin/m4		src/usr.bin/m4
 usr.bin/indent		src/usr.bin/indent

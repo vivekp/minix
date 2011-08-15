@@ -17,7 +17,7 @@ SUBDIR=	aal add_route arp ash at autil awk \
 	intr ipcrm irdpd isoread join kill last \
 	less lex loadkeys loadramdisk look lp \
 	lpd lspci M make  MAKEDEV \
-	mdb mdocml mesg mined ackmkdep mkdir mkfifo mkfs.mfs mknod \
+	mdb mdocml mesg mined ackmkdep mkfifo mkfs.mfs mknod \
 	mkproto modem mount mt netconf newroot nice acknm nohup \
 	nonamed od paste patch \
 	ping postinstall poweroff pr prep printf printroot \
