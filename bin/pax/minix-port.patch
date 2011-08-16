@@ -1,0 +1,210 @@
+diff -ru nbsdsrc/src/bin/pax/Makefile bin/pax/Makefile
+--- nbsdsrc/src/bin/pax/Makefile
++++ bin/pax/Makefile
+@@ -3,6 +3,11 @@
+ 
+ .include <bsd.own.mk>
+ 
++.if defined(__MINIX)
++SMALLPROG= yes
++MKBSDTAR= yes
++.endif
++
+ PROG=   pax
+ SRCS=	ar_io.c ar_subs.c buf_subs.c file_subs.c ftree.c\
+ 	gen_subs.c getoldopt.c options.c pat_rep.c pax.c sel_subs.c tables.c\
+@@ -10,6 +15,10 @@
+ 
+ .if defined(SMALLPROG)
+ CPPFLAGS+=	-DSMALL -DNO_CPIO
++.if defined(__MINIX)
++DPADD+= ${LIBUTIL}
++LDADD+= -lutil
++.endif # __MINIX
+ .else
+ SRCS+=		getid.c spec.c misc.c pack_dev.c cpio.c
+ CPPFLAGS+=	-I${NETBSDSRCDIR}/usr.sbin/mtree \
+@@ -46,6 +55,10 @@
+ 
+ LDADD+=	-lrmt
+ DPADD+=	${LIBRMT}
++.endif
++
++.if defined(__MINIX)
++SYMLINKS+= ${BINDIR}/pax /usr/bin/pax
+ .endif
+ 
+ .include <bsd.prog.mk>
+diff -ru nbsdsrc/src/bin/pax/cpio.c bin/pax/cpio.c
+--- nbsdsrc/src/bin/pax/cpio.c
++++ bin/pax/cpio.c
+@@ -763,13 +763,13 @@
+ 		HEX) ||
+ 	    ul_asc((u_long)arcn->sb.st_nlink, hd->c_nlink, sizeof(hd->c_nlink),
+ 		HEX) ||
+-	    ul_asc((u_long)MAJOR(arcn->sb.st_dev),hd->c_maj, sizeof(hd->c_maj),
++	    ul_asc((u_long)MAJOR_PAX(arcn->sb.st_dev),hd->c_maj, sizeof(hd->c_maj),
+ 		HEX) ||
+-	    ul_asc((u_long)MINOR(arcn->sb.st_dev),hd->c_min, sizeof(hd->c_min),
++	    ul_asc((u_long)MINOR_PAX(arcn->sb.st_dev),hd->c_min, sizeof(hd->c_min),
+ 		HEX) ||
+-	    ul_asc((u_long)MAJOR(arcn->sb.st_rdev),hd->c_rmaj,sizeof(hd->c_maj),
++	    ul_asc((u_long)MAJOR_PAX(arcn->sb.st_rdev),hd->c_rmaj,sizeof(hd->c_maj),
+ 		HEX) ||
+-	    ul_asc((u_long)MINOR(arcn->sb.st_rdev),hd->c_rmin,sizeof(hd->c_min),
++	    ul_asc((u_long)MINOR_PAX(arcn->sb.st_rdev),hd->c_rmin,sizeof(hd->c_min),
+ 		HEX) ||
+ 	    ul_asc((u_long)nsz, hd->c_namesize, sizeof(hd->c_namesize), HEX))
+ 		goto out;
+diff -ru nbsdsrc/src/bin/pax/file_subs.c bin/pax/file_subs.c
+--- nbsdsrc/src/bin/pax/file_subs.c
++++ bin/pax/file_subs.c
+@@ -58,6 +58,9 @@
+ #include <errno.h>
+ #include <sys/uio.h>
+ #include <stdlib.h>
++#ifdef __minix
++#include <utime.h>
++#endif
+ #include "pax.h"
+ #include "extern.h"
+ #include "options.h"
+@@ -827,8 +830,16 @@
+ #endif
+ 	if (slk)
+ 		return;
++#ifndef __minix
+ 	if (utimes(fnm, tv) == -1)
+ 		goto bad;
++#else
++	struct utimbuf time;
++	time.actime = tv[0].tv_sec;
++	time.modtime = tv[1].tv_sec;
++	if (utime(fnm, &time) == -1)
++		goto bad;
++#endif
+ 	return;
+ bad:
+ 	syswarn(1, errno, "Access/modification time set failed on: %s", fnm);
+@@ -845,7 +856,11 @@
+ set_ids(char *fnm, uid_t uid, gid_t gid)
+ {
+ 	if (geteuid() == 0)
++#ifdef __minix
++		if (chown(fnm, uid, gid)) {
++#else
+ 		if (lchown(fnm, uid, gid)) {
++#endif
+ 			(void)fflush(listf);
+ 			syswarn(1, errno, "Cannot set file uid/gid of %s",
+ 			    fnm);
+@@ -863,7 +878,11 @@
+ set_pmode(char *fnm, mode_t mode)
+ {
+ 	mode &= A_BITS;
++#ifdef __minix
++	if (chmod(fnm, mode)) {
++#else
+ 	if (lchmod(fnm, mode)) {
++#endif
+ 		(void)fflush(listf);
+ 		syswarn(1, errno, "Cannot set permissions on %s", fnm);
+ 	}
+diff -ru nbsdsrc/src/bin/pax/gen_subs.c bin/pax/gen_subs.c
+--- nbsdsrc/src/bin/pax/gen_subs.c
++++ bin/pax/gen_subs.c
+@@ -133,8 +133,8 @@
+ 	 * print device id's for devices, or sizes for other nodes
+ 	 */
+ 	if ((arcn->type == PAX_CHR) || (arcn->type == PAX_BLK))
+-		(void)fprintf(fp, "%4lu,%4lu ", (long) MAJOR(sbp->st_rdev),
+-		    (long) MINOR(sbp->st_rdev));
++		(void)fprintf(fp, "%4lu,%4lu ", (long) MAJOR_PAX(sbp->st_rdev),
++		    (long) MINOR_PAX(sbp->st_rdev));
+ 	else {
+ 		(void)fprintf(fp, OFFT_FP("9") " ", (OFFT_T)sbp->st_size);
+ 	}
+diff -ru nbsdsrc/src/bin/pax/pax.c bin/pax/pax.c
+--- nbsdsrc/src/bin/pax/pax.c
++++ bin/pax/pax.c
+@@ -386,7 +386,9 @@
+ 	 */
+ 	if (getrlimit(RLIMIT_DATA , &reslimit) == 0){
+ 		reslimit.rlim_cur = reslimit.rlim_max;
++#ifndef __minix
+ 		(void)setrlimit(RLIMIT_DATA , &reslimit);
++#endif
+ 	}
+ 
+ 	/*
+@@ -395,7 +397,9 @@
+ 	 */
+ 	if (getrlimit(RLIMIT_FSIZE , &reslimit) == 0){
+ 		reslimit.rlim_cur = reslimit.rlim_max;
++#ifndef __minix
+ 		(void)setrlimit(RLIMIT_FSIZE , &reslimit);
++#endif
+ 	}
+ 
+ 	/*
+@@ -403,7 +407,9 @@
+ 	 */
+ 	if (getrlimit(RLIMIT_STACK , &reslimit) == 0){
+ 		reslimit.rlim_cur = reslimit.rlim_max;
++#ifndef __minix
+ 		(void)setrlimit(RLIMIT_STACK , &reslimit);
++#endif
+ 	}
+ 
+ #ifdef RLIMIT_RSS
+@@ -412,7 +418,9 @@
+ 	 */
+ 	if (getrlimit(RLIMIT_RSS , &reslimit) == 0){
+ 		reslimit.rlim_cur = reslimit.rlim_max;
++#ifndef __minix
+ 		(void)setrlimit(RLIMIT_RSS , &reslimit);
++#endif
+ 	}
+ #endif
+ 
+diff -ru nbsdsrc/src/bin/pax/pax.h bin/pax/pax.h
+--- nbsdsrc/src/bin/pax/pax.h
++++ bin/pax/pax.h
+@@ -36,7 +36,11 @@
+  */
+ 
+ #if ! HAVE_NBTOOL_CONFIG_H
++#ifdef __minix
++#define HAVE_LUTIMES 0
++#else
+ #define HAVE_LUTIMES 1
++#endif /* __minix */
+ #define HAVE_STRUCT_STAT_ST_FLAGS 1
+ #endif
+ 
+@@ -248,8 +252,8 @@
+ # define MINOR(x)	minor_netbsd(x)
+ # define TODEV(x, y)	makedev_netbsd((x), (y))
+ #else
+-# define MAJOR(x)	major(x)
+-# define MINOR(x)	minor(x)
++# define MAJOR_PAX(x)	major(x)
++# define MINOR_PAX(x)	minor(x)
+ # define TODEV(x, y)	makedev((x), (y))
+ #endif
+ 
+diff -ru nbsdsrc/src/bin/pax/tar.c bin/pax/tar.c
+--- nbsdsrc/src/bin/pax/tar.c
++++ bin/pax/tar.c
+@@ -1125,9 +1125,9 @@
+ 			hd->typeflag = CHRTYPE;
+ 		else
+ 			hd->typeflag = BLKTYPE;
+-		if (ul_oct((u_long)MAJOR(arcn->sb.st_rdev), hd->devmajor,
++		if (ul_oct((u_long)MAJOR_PAX(arcn->sb.st_rdev), hd->devmajor,
+ 		   sizeof(hd->devmajor), 3) ||
+-		   ul_oct((u_long)MINOR(arcn->sb.st_rdev), hd->devminor,
++		   ul_oct((u_long)MINOR_PAX(arcn->sb.st_rdev), hd->devminor,
+ 		   sizeof(hd->devminor), 3) ||
+ 		   ul_oct((u_long)0L, hd->size, sizeof(hd->size), 3))
+ 			return size_err("DEVTYPE", arcn);

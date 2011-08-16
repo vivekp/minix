@@ -17,7 +17,7 @@ CPPFLAGS+=-DLIBC_SCCS -I${.CURDIR}
 .if defined(__MINIX)
 SRCS=	efun.c getmntopts.c login.c loginx.c login_cap.c logout.c \
 	logoutx.c logwtmp.c logwtmpx.c opendisk.c \
-	passwd.c pidfile.c pidlock.c \
+	passwd.c pidfile.c pidlock.c raise_default_signal.c \
 	secure_path.c snprintb.c stat_flags.c \
 	ttyaction.c ttymsg.c
 .else

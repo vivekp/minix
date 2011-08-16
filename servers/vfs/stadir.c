@@ -57,6 +57,24 @@ PUBLIC int do_chdir()
 
 
 /*===========================================================================*
+ *				do_fchroot				     *
+ *===========================================================================*/
+PUBLIC int do_fchroot()
+{
+  /* Change directory on already-opened fd. */
+  struct filp *rfilp;
+
+  if (!super_user) return(EPERM);	/* only su may fchroot() */
+
+  /* Is the file descriptor valid? */
+  if ((rfilp = get_filp(m_in.fd)) == NULL) return(err_code);
+
+  dup_vnode(rfilp->filp_vno);	/* Change into expects a reference. */
+  return change_into(&fp->fp_rd, rfilp->filp_vno);
+}
+
+
+/*===========================================================================*
  *				do_chroot				     *
  *===========================================================================*/
 PUBLIC int do_chroot()

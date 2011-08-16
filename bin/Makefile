@@ -2,6 +2,6 @@
 
 .include <bsd.own.mk>
 
-SUBDIR= chmod mkdir
+SUBDIR= chmod mkdir pax
 
 .include <bsd.subdir.mk>
