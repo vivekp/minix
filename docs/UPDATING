@@ -8,12 +8,6 @@
 	To create new password databases:
 	# make -C etc installpasswd
 
-	To remove old executables lying around:
-	# rm /usr/bin/chown /usr/bin/chmod
-	To let `useradd` find the necessary utilities:
-	# cp /usr/bin/pax /bin/pax
-	# cp /usr/bin/mkdir /bin/mkdir
-
 	To test the switch to new passwd format:
 	# make -C usr.sbin/user test 
 

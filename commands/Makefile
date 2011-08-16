@@ -49,6 +49,6 @@ SUBDIR+=acd asmconv gas2ack
 # Compile them with new libc + clang.
 SUBDIR+=date find finger ls man write \
 	cron crontab fetch id ipcs leave logger \
-	mail pax reboot service tar
+	mail reboot service tar
 
 .include <bsd.subdir.mk>
