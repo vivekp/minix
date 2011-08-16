@@ -9,6 +9,7 @@ lib/libutil		src/lib/libutil
 nbsd_include		src/include
 bin/chmod		src/bin/chmod
 bin/mkdir		src/bin/mkdir
+bin/pax			src/bin/pax
 sbin/chown		src/sbin/chown
 usr.bin/m4		src/usr.bin/m4
 usr.bin/indent		src/usr.bin/indent
@@ -19,7 +20,6 @@ usr.bin/login		src/usr.bin/login
 usr.bin/mkdep		src/usr.bin/mkdep
 usr.bin/newgrp		src/usr.bin/newgrp
 usr.bin/uniq		src/usr.bin/uniq
-usr.bin/su		src/usr.bin/su
 usr.bin/chpass       	src/usr.bin/chpass
 usr.bin/passwd		src/usr.bin/passwd
 usr.sbin/pwd_mkdb	src/usr.sbin/pwd_mkdb
